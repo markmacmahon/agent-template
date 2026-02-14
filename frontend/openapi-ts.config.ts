@@ -1,12 +1,16 @@
 import { defineConfig } from "@hey-api/openapi-ts";
 import { config } from "dotenv";
 
+// Try to load .env.local (local development) and .env (CI/production)
 config({ path: ".env.local" });
+config({ path: ".env" });
 
-const openapiFile = process.env.OPENAPI_OUTPUT_FILE;
+// Use env var or fallback to default location (matches backend default)
+const openapiFile =
+  process.env.OPENAPI_OUTPUT_FILE || "../local-shared-data/openapi.json";
 
 export default defineConfig({
-  input: openapiFile as string,
+  input: openapiFile,
   output: {
     format: "prettier",
     lint: "eslint",
