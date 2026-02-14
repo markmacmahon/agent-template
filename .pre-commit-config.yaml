@@ -59,7 +59,7 @@ repos:
         pass_filenames: false
       - id: generate-frontend-client
         name: generate frontend client
-        entry: sh -c 'cd frontend && pnpm run generate-client'
+        entry: sh -c 'cd frontend && OPENAPI_OUTPUT_FILE=../local-shared-data/openapi.json pnpm run generate-client'
         language: system
         # Only run frontend client generation if frontend files have changed:
         files: openapi\.json$
