@@ -125,7 +125,7 @@ To run CI/CD pipelines in GitHub Actions, configure these secrets in your reposi
 | `RESET_PASSWORD_SECRET_KEY` | Password reset token secret (generate with command below) | `e5f6g7h8...` (64 chars) |
 | `VERIFICATION_SECRET_KEY` | Email verification token secret (generate with command below) | `i9j0k1l2...` (64 chars) |
 | `CORS_ORIGINS` | Allowed CORS origins (comma-separated) | `https://yourdomain.com,https://app.yourdomain.com` |
-| `OPENAPI_OUTPUT_FILE` | Path for OpenAPI schema output | `./shared-data/openapi.json` |
+| `OPENAPI_OUTPUT_FILE` | Path for OpenAPI schema output (backend: relative to backend/, frontend: relative to frontend/) | Backend: `../local-shared-data/openapi.json`, Frontend: `../local-shared-data/openapi.json` |
 
 ### Generating Secret Keys
 

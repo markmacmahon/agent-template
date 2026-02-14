@@ -7,6 +7,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     # OpenAPI docs
     OPENAPI_URL: str = "/openapi.json"
+    # Path where OpenAPI schema is generated (relative to backend/)
+    # Frontend reads from same location (relative to frontend/)
+    # Both resolve to: <project-root>/local-shared-data/openapi.json
     OPENAPI_OUTPUT_FILE: str = "../local-shared-data/openapi.json"
 
     # Database - Sensible defaults for local development
