@@ -15,6 +15,7 @@ help:
 .PHONY: start-backend test-backend
 
 start-backend: ## Start the backend server with FastAPI and hot reload
+	-@lsof -ti :8000 | xargs kill 2>/dev/null || true
 	cd $(BACKEND_DIR) && ./start.sh
 
 test-backend: ## Run backend tests using pytest (requires test database)
@@ -28,6 +29,7 @@ test-backend: ## Run backend tests using pytest (requires test database)
 .PHONY: start-frontend test-frontend
 
 start-frontend: ## Start the frontend server with pnpm and hot reload
+	-@lsof -ti :3000 | xargs kill 2>/dev/null || true
 	cd $(FRONTEND_DIR) && ./start.sh
 
 test-frontend: ## Run frontend tests using npm
