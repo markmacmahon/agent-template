@@ -52,7 +52,7 @@ export default async function DashboardPage({
         </Link>
       </div>
 
-      <section className="p-6 bg-white rounded-lg shadow-lg mt-8">
+      <section className="p-6 bg-card rounded-lg shadow-lg mt-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Apps</h2>
           <PageSizeSelector currentSize={size} />
@@ -80,7 +80,7 @@ export default async function DashboardPage({
                   <TableCell>{app.description}</TableCell>
                   <TableCell className="text-center">
                     <DropdownMenu>
-                      <DropdownMenuTrigger className="cursor-pointer p-1 text-gray-600 hover:text-gray-800">
+                      <DropdownMenuTrigger className="cursor-pointer p-1 text-muted-foreground hover:text-foreground">
                         <span className="text-lg font-semibold">...</span>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="p-2">

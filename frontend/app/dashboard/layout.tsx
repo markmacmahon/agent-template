@@ -72,7 +72,7 @@ export default function DashboardLayout({
           <div className="relative">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 hover:bg-gray-400">
+                <button className="flex items-center justify-center w-10 h-10 rounded-full bg-muted hover:bg-accent">
                   <Avatar>
                     <AvatarFallback>U</AvatarFallback>
                   </Avatar>
@@ -80,18 +80,12 @@ export default function DashboardLayout({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" side="bottom">
                 <DropdownMenuItem>
-                  <Link
-                    href="/support"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
+                  <Link href="/support" className="block w-full">
                     Support
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <button
-                    onClick={logout}
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
+                  <button onClick={logout} className="block w-full text-left">
                     Logout
                   </button>
                 </DropdownMenuItem>
