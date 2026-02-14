@@ -19,9 +19,7 @@ class TestApps:
         assert created_app["description"] == app_data["description"]
 
         # Check if the app is in the database
-        app = await db_session.execute(
-            select(App).where(App.id == created_app["id"])
-        )
+        app = await db_session.execute(select(App).where(App.id == created_app["id"]))
         app = app.scalar()
 
         assert app is not None
@@ -66,9 +64,7 @@ class TestApps:
         apps = response_data["items"]
 
         # Filter apps created in this test (to avoid interference from other tests)
-        test_apps = [
-            app for app in apps if app["name"] in ["First App", "Second App"]
-        ]
+        test_apps = [app for app in apps if app["name"] in ["First App", "Second App"]]
 
         assert len(test_apps) == 2
         assert any(app["name"] == "First App" for app in test_apps)

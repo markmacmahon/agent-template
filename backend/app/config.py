@@ -9,13 +9,19 @@ class Settings(BaseSettings):
     OPENAPI_URL: str = "/openapi.json"
 
     # Database - Sensible defaults for local development
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:password@localhost:5432/agents_db"
-    TEST_DATABASE_URL: str = "postgresql+asyncpg://postgres:password@localhost:5433/agents_test_db"
+    DATABASE_URL: str = (
+        "postgresql+asyncpg://postgres:password@localhost:5432/agents_db"
+    )
+    TEST_DATABASE_URL: str = (
+        "postgresql+asyncpg://postgres:password@localhost:5433/agents_test_db"
+    )
     EXPIRE_ON_COMMIT: bool = False
 
     # User secrets - DEVELOPMENT DEFAULTS (MUST override in production!)
     ACCESS_SECRET_KEY: str = "dev-access-secret-CHANGE-IN-PRODUCTION-min-32-chars"
-    RESET_PASSWORD_SECRET_KEY: str = "dev-reset-secret-CHANGE-IN-PRODUCTION-min-32-chars"
+    RESET_PASSWORD_SECRET_KEY: str = (
+        "dev-reset-secret-CHANGE-IN-PRODUCTION-min-32-chars"
+    )
     VERIFICATION_SECRET_KEY: str = "dev-verify-secret-CHANGE-IN-PRODUCTION-min-32-chars"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_SECONDS: int = 3600

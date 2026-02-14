@@ -15,7 +15,8 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: "ChatBot Application Starter",
-  description: "Build intelligent conversational AI applications with a modern, type-safe full-stack framework",
+  description:
+    "Build intelligent conversational AI applications with a modern, type-safe full-stack framework",
 };
 
 export default function RootLayout({
