@@ -9,7 +9,7 @@ import {
   type SubscriberRead,
   type PageSubscriberSummary,
   type PageThreadSummary,
-} from "@/app/openapi-client";
+} from "@/app/clientService";
 
 type SuccessResult<T> = { data: T };
 type ErrorResult = { error: string };

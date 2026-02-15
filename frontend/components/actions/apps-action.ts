@@ -8,7 +8,7 @@ import {
   getApp,
   updateApp,
 } from "@/app/clientService";
-import { ReadAppResponse, AppRead } from "@/app/openapi-client";
+import { ReadAppResponse, AppRead } from "@/app/clientService";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { appSchema } from "@/lib/definitions";

@@ -12,7 +12,7 @@ import {
   type ThreadRead,
   type MessageRead,
   type ThreadCreateResponse,
-} from "@/app/openapi-client";
+} from "@/app/clientService";
 
 type SuccessResult<T> = { data: T };
 type ErrorResult = { error: string };

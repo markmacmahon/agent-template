@@ -37,7 +37,7 @@ test.describe("Subscribers Flow", () => {
     await page.goto("/");
   });
 
-  test("subscribers page: navigate from app page shows 3 panels and empty state", async ({
+  test("subscribers page: navigate from app page shows 3 panels and no errors", async ({
     page,
   }) => {
     await login(page);
@@ -56,6 +56,14 @@ test.describe("Subscribers Flow", () => {
     await expect(
       page.getByTestId("subscribers-threads-panel-title"),
     ).toBeVisible();
+
+    // Wait for the subscriber list to finish loading, then verify no API errors
+    await page.waitForTimeout(1500);
+    const errorText = page
+      .getByTestId("subscribers-panel")
+      .locator(".text-red-500");
+    await expect(errorText).toHaveCount(0);
+
     await expect(
       page.getByTestId("subscribers-select-subscriber-msg"),
     ).toBeVisible();
@@ -64,7 +72,9 @@ test.describe("Subscribers Flow", () => {
     ).toBeVisible();
   });
 
-  test("subscribers page: direct URL shows same layout", async ({ page }) => {
+  test("subscribers page: direct URL shows same layout with no errors", async ({
+    page,
+  }) => {
     await login(page);
     const appId = await getFirstAppId(page);
 
@@ -76,6 +86,13 @@ test.describe("Subscribers Flow", () => {
     await expect(page.getByTestId("subscribers-threads-panel")).toBeVisible();
     await expect(page.getByTestId("subscribers-chat-panel")).toBeVisible();
     await expect(page.getByTestId("subscribers-search")).toBeVisible();
+
+    // Verify subscriber list loads without API errors
+    await page.waitForTimeout(1500);
+    const errorText = page
+      .getByTestId("subscribers-panel")
+      .locator(".text-red-500");
+    await expect(errorText).toHaveCount(0);
   });
 
   test("app page: clicking app name in list opens app page with actions", async ({
