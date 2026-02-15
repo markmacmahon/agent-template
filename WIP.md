@@ -1,33 +1,23 @@
 # Work In Progress - ChatBot Application Starter
 
+## Current Focus
+
+Preparing frontend for chat UI integration (from ai-chatbot reference project).
+
 ## Recent Changes
 
 ### 2026-02-14
 
-#### Test Suite Restructure
-- Reorganized `__tests__/` from flat structure into typed subdirectories:
-  - `actions/` -- server action tests (.ts)
-  - `pages/` -- page component tests (.tsx)
-  - `components/` -- reusable component tests (.tsx)
-  - `lib/` -- utility/pure function tests (.ts)
-- Renamed files to kebab-case matching source file names
-- Fixed file extensions (.tsx → .ts where no JSX)
-- Fixed relative mock paths for new directory depth
-- Fixed lint error in utils.test.ts (constant binary expression)
-- Added missing tests: apps-action, logout-action, lib/definitions (Zod schemas)
-- Updated `frontend/AGENTS.md` with new test conventions
-- **Result:** 17 test suites, 85 tests, all passing
-
-#### Auth URL Restructure
-- Moved frontend auth pages under `/auth/` prefix to match backend API grouping:
-  - `/login` → `/auth/login`
-  - `/register` → `/auth/register`
-  - `/password-recovery` → `/auth/forgot-password`
-  - `/password-recovery/confirm` → `/auth/reset-password`
-- Updated all internal links, redirects, and middleware references
-- Updated backend `email.py` password reset link to use new URL
-- Updated all frontend and backend tests
-- Updated `frontend/AGENTS.md` directory layout documentation
+- Migrated to unified `radix-ui` package, removed 7 individual `@radix-ui/react-*` packages
+- Replaced `@radix-ui/react-icons` with `lucide-react`
+- Converted `postcss.config.js` to ESM (`postcss.config.mjs`)
+- Fixed dark mode variant to include `.dark` element itself
+- Added `outline-ring/50` base default
+- Aligned CSS variable format with ai-chatbot (hsl in vars, plain refs in @theme)
 
 ## Upcoming
-- Tailwind CSS upgrade evaluation
+
+- Install `ai` + `@ai-sdk/react` for chat functionality
+- Build minimal chat page at `/dashboard/chat`
+- Create `/api/chat` route to proxy to AI provider
+- Wire chat to per-app context

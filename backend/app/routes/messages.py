@@ -4,12 +4,10 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import and_
 
 from app.database import User, get_async_session
 from app.models import App, Thread, Message
-from app.schemas import MessageRead, MessageCreate, MessageCreateInternal
-from typing import Literal
+from app.schemas import MessageRead, MessageCreate
 from app.users import current_active_user
 
 router = APIRouter(tags=["messages"])
@@ -28,11 +26,7 @@ async def get_thread_with_lock(
     result = await db.execute(
         select(Thread)
         .join(App)
-        .filter(
-            Thread.id == thread_id,
-            Thread.app_id == app_id,
-            App.user_id == user.id
-        )
+        .filter(Thread.id == thread_id, Thread.app_id == app_id, App.user_id == user.id)
         .with_for_update()  # Lock the thread row
     )
     thread = result.scalars().first()
@@ -57,11 +51,7 @@ async def get_thread_by_id(
     result = await db.execute(
         select(Thread)
         .join(App)
-        .filter(
-            Thread.id == thread_id,
-            Thread.app_id == app_id,
-            App.user_id == user.id
-        )
+        .filter(Thread.id == thread_id, Thread.app_id == app_id, App.user_id == user.id)
     )
     thread = result.scalars().first()
 
@@ -73,7 +63,9 @@ async def get_thread_by_id(
     return thread
 
 
-@router.get("/apps/{app_id}/threads/{thread_id}/messages", response_model=list[MessageRead])
+@router.get(
+    "/apps/{app_id}/threads/{thread_id}/messages", response_model=list[MessageRead]
+)
 async def list_messages(
     app_id: UUID,
     thread_id: UUID,
@@ -82,7 +74,9 @@ async def list_messages(
     before_seq: int | None = Query(
         None, description="Get messages before this sequence number (cursor pagination)"
     ),
-    limit: int = Query(50, ge=1, le=200, description="Maximum number of messages to return"),
+    limit: int = Query(
+        50, ge=1, le=200, description="Maximum number of messages to return"
+    ),
 ):
     """
     List messages for a thread with cursor-based pagination.
@@ -147,7 +141,9 @@ async def create_message(
     return db_message
 
 
-@router.post("/apps/{app_id}/threads/{thread_id}/messages/assistant", response_model=MessageRead)
+@router.post(
+    "/apps/{app_id}/threads/{thread_id}/messages/assistant", response_model=MessageRead
+)
 async def create_assistant_message(
     app_id: UUID,
     thread_id: UUID,

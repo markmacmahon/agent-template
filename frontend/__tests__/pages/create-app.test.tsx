@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import { screen } from "@testing-library/dom";
 import "@testing-library/jest-dom";
 
-import CreateAppPage from "@/app/dashboard/add-app/page";
+import CreateAppPage from "@/app/dashboard/apps/new/page";
 
 jest.mock("../../components/actions/apps-action", () => ({
   addApp: jest.fn(),

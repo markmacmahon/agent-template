@@ -16,5 +16,5 @@ export default defineConfig({
     lint: "eslint",
     path: "app/openapi-client",
   },
-  plugins: ["@hey-api/client-axios"],
+  plugins: ["@hey-api/client-fetch"],
 });

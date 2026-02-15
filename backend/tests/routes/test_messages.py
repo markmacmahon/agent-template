@@ -1,11 +1,12 @@
 import pytest
-import asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.mark.asyncio
-async def test_create_message(test_client: AsyncClient, authenticated_user, db_session: AsyncSession):
+async def test_create_message(
+    test_client: AsyncClient, authenticated_user, db_session: AsyncSession
+):
     """Test creating a message in a thread."""
     # Create app and thread
     app_response = await test_client.post(
@@ -45,7 +46,9 @@ async def test_create_message(test_client: AsyncClient, authenticated_user, db_s
 
 
 @pytest.mark.asyncio
-async def test_message_seq_increments(test_client: AsyncClient, authenticated_user, db_session: AsyncSession):
+async def test_message_seq_increments(
+    test_client: AsyncClient, authenticated_user, db_session: AsyncSession
+):
     """Test that message seq increments correctly."""
     # Create app and thread
     app_response = await test_client.post(
@@ -74,7 +77,9 @@ async def test_message_seq_increments(test_client: AsyncClient, authenticated_us
 
 
 @pytest.mark.asyncio
-async def test_list_messages(test_client: AsyncClient, authenticated_user, db_session: AsyncSession):
+async def test_list_messages(
+    test_client: AsyncClient, authenticated_user, db_session: AsyncSession
+):
     """Test listing messages in a thread."""
     # Create app and thread
     app_response = await test_client.post(
@@ -95,7 +100,7 @@ async def test_list_messages(test_client: AsyncClient, authenticated_user, db_se
     for i in range(5):
         await test_client.post(
             f"/apps/{app_id}/threads/{thread_id}/messages",
-            json={"content": f"Message {i+1}"},
+            json={"content": f"Message {i + 1}"},
             headers=authenticated_user["headers"],
         )
 
@@ -111,11 +116,13 @@ async def test_list_messages(test_client: AsyncClient, authenticated_user, db_se
     # Verify order (ascending by seq)
     for i, msg in enumerate(messages):
         assert msg["seq"] == i + 1
-        assert msg["content"] == f"Message {i+1}"
+        assert msg["content"] == f"Message {i + 1}"
 
 
 @pytest.mark.asyncio
-async def test_list_messages_with_cursor_pagination(test_client: AsyncClient, authenticated_user, db_session: AsyncSession):
+async def test_list_messages_with_cursor_pagination(
+    test_client: AsyncClient, authenticated_user, db_session: AsyncSession
+):
     """Test cursor pagination with before_seq."""
     # Create app and thread
     app_response = await test_client.post(
@@ -136,7 +143,7 @@ async def test_list_messages_with_cursor_pagination(test_client: AsyncClient, au
     for i in range(10):
         await test_client.post(
             f"/apps/{app_id}/threads/{thread_id}/messages",
-            json={"content": f"Message {i+1}"},
+            json={"content": f"Message {i + 1}"},
             headers=authenticated_user["headers"],
         )
 
@@ -158,7 +165,9 @@ async def test_list_messages_with_cursor_pagination(test_client: AsyncClient, au
 
 
 @pytest.mark.asyncio
-async def test_get_message(test_client: AsyncClient, authenticated_user, db_session: AsyncSession):
+async def test_get_message(
+    test_client: AsyncClient, authenticated_user, db_session: AsyncSession
+):
     """Test getting a specific message."""
     # Create app, thread, and message
     app_response = await test_client.post(
@@ -194,7 +203,9 @@ async def test_get_message(test_client: AsyncClient, authenticated_user, db_sess
 
 
 @pytest.mark.asyncio
-async def test_create_message_unauthorized_thread(test_client: AsyncClient, authenticated_user, db_session: AsyncSession):
+async def test_create_message_unauthorized_thread(
+    test_client: AsyncClient, authenticated_user, db_session: AsyncSession
+):
     """Test that creating a message in someone else's thread fails."""
     # Would need a second user fixture for this, but conceptually:
     # - Create thread owned by different user
@@ -203,6 +214,7 @@ async def test_create_message_unauthorized_thread(test_client: AsyncClient, auth
 
     # For now, test with non-existent thread and app IDs
     import uuid
+
     fake_app_id = str(uuid.uuid4())
     fake_thread_id = str(uuid.uuid4())
 
@@ -216,7 +228,9 @@ async def test_create_message_unauthorized_thread(test_client: AsyncClient, auth
 
 
 @pytest.mark.asyncio
-async def test_message_always_user_role(test_client: AsyncClient, authenticated_user, db_session: AsyncSession):
+async def test_message_always_user_role(
+    test_client: AsyncClient, authenticated_user, db_session: AsyncSession
+):
     """Test that messages created via POST are always role='user'."""
     # Create app and thread
     app_response = await test_client.post(

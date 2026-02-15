@@ -45,7 +45,7 @@ export default async function DashboardPage({
       </p>
 
       <div className="mb-6">
-        <Link href="/dashboard/add-app">
+        <Link href="/dashboard/apps/new">
           <Button variant="outline" className="text-lg px-4 py-2">
             Add New App
           </Button>
@@ -84,8 +84,10 @@ export default async function DashboardPage({
                         <span className="text-lg font-semibold">...</span>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="p-2">
-                        <DropdownMenuItem disabled={true}>
-                          Edit
+                        <DropdownMenuItem asChild>
+                          <Link href={`/dashboard/apps/${app.id}/edit`}>
+                            Edit
+                          </Link>
                         </DropdownMenuItem>
                         <DeleteButton appId={app.id} />
                       </DropdownMenuContent>

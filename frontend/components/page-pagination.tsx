@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  DoubleArrowLeftIcon,
-  DoubleArrowRightIcon,
-} from "@radix-ui/react-icons";
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 
 interface PagePaginationProps {
   currentPage: number;
@@ -49,7 +49,7 @@ export function PagePagination({
           className={!hasPreviousPage ? "pointer-events-none opacity-50" : ""}
         >
           <Button variant="outline" size="sm" disabled={!hasPreviousPage}>
-            <DoubleArrowLeftIcon className="h-4 w-4" />
+            <ChevronsLeft className="h-4 w-4" />
           </Button>
         </Link>
 
@@ -59,7 +59,7 @@ export function PagePagination({
           className={!hasPreviousPage ? "pointer-events-none opacity-50" : ""}
         >
           <Button variant="outline" size="sm" disabled={!hasPreviousPage}>
-            <ChevronLeftIcon className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4" />
           </Button>
         </Link>
 
@@ -76,7 +76,7 @@ export function PagePagination({
           className={hasNextPage ? "" : "pointer-events-none opacity-50"}
         >
           <Button variant="outline" size="sm" disabled={!hasNextPage}>
-            <ChevronRightIcon className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </Link>
 
@@ -86,7 +86,7 @@ export function PagePagination({
           className={hasNextPage ? "" : "pointer-events-none opacity-50"}
         >
           <Button variant="outline" size="sm" disabled={!hasNextPage}>
-            <DoubleArrowRightIcon className="h-4 w-4" />
+            <ChevronsRight className="h-4 w-4" />
           </Button>
         </Link>
       </div>

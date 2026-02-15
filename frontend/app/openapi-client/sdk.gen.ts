@@ -32,6 +32,9 @@ import type {
   DeleteThreadData,
   DeleteThreadErrors,
   DeleteThreadResponses,
+  GetAppData,
+  GetAppErrors,
+  GetAppResponses,
   GetMessageData,
   GetMessageErrors,
   GetMessageResponses,
@@ -56,6 +59,9 @@ import type {
   ResetResetPasswordData,
   ResetResetPasswordErrors,
   ResetResetPasswordResponses,
+  UpdateAppData,
+  UpdateAppErrors,
+  UpdateAppResponses,
   UpdateThreadData,
   UpdateThreadErrors,
   UpdateThreadResponses,
@@ -111,7 +117,6 @@ export const authJwtLogin = <ThrowOnError extends boolean = false>(
     ThrowOnError
   >({
     ...urlSearchParamsBodySerializer,
-    responseType: "json",
     url: "/auth/jwt/login",
     ...options,
     headers: {
@@ -131,7 +136,6 @@ export const authJwtLogout = <ThrowOnError extends boolean = false>(
     AuthJwtLogoutErrors,
     ThrowOnError
   >({
-    responseType: "json",
     security: [{ scheme: "bearer", type: "http" }],
     url: "/auth/jwt/logout",
     ...options,
@@ -148,7 +152,6 @@ export const registerRegister = <ThrowOnError extends boolean = false>(
     RegisterRegisterErrors,
     ThrowOnError
   >({
-    responseType: "json",
     url: "/auth/register",
     ...options,
     headers: {
@@ -168,7 +171,6 @@ export const resetForgotPassword = <ThrowOnError extends boolean = false>(
     ResetForgotPasswordErrors,
     ThrowOnError
   >({
-    responseType: "json",
     url: "/auth/forgot-password",
     ...options,
     headers: {
@@ -188,7 +190,6 @@ export const resetResetPassword = <ThrowOnError extends boolean = false>(
     ResetResetPasswordErrors,
     ThrowOnError
   >({
-    responseType: "json",
     url: "/auth/reset-password",
     ...options,
     headers: {
@@ -208,7 +209,6 @@ export const verifyRequestToken = <ThrowOnError extends boolean = false>(
     VerifyRequestTokenErrors,
     ThrowOnError
   >({
-    responseType: "json",
     url: "/auth/request-verify-token",
     ...options,
     headers: {
@@ -228,7 +228,6 @@ export const verifyVerify = <ThrowOnError extends boolean = false>(
     VerifyVerifyErrors,
     ThrowOnError
   >({
-    responseType: "json",
     url: "/auth/verify",
     ...options,
     headers: {
@@ -248,7 +247,6 @@ export const usersCurrentUser = <ThrowOnError extends boolean = false>(
     UsersCurrentUserErrors,
     ThrowOnError
   >({
-    responseType: "json",
     security: [{ scheme: "bearer", type: "http" }],
     url: "/users/me",
     ...options,
@@ -265,7 +263,6 @@ export const usersPatchCurrentUser = <ThrowOnError extends boolean = false>(
     UsersPatchCurrentUserErrors,
     ThrowOnError
   >({
-    responseType: "json",
     security: [{ scheme: "bearer", type: "http" }],
     url: "/users/me",
     ...options,
@@ -302,7 +299,6 @@ export const usersUser = <ThrowOnError extends boolean = false>(
     UsersUserErrors,
     ThrowOnError
   >({
-    responseType: "json",
     security: [{ scheme: "bearer", type: "http" }],
     url: "/users/{id}",
     ...options,
@@ -319,7 +315,6 @@ export const usersPatchUser = <ThrowOnError extends boolean = false>(
     UsersPatchUserErrors,
     ThrowOnError
   >({
-    responseType: "json",
     security: [{ scheme: "bearer", type: "http" }],
     url: "/users/{id}",
     ...options,
@@ -340,7 +335,6 @@ export const readApp = <ThrowOnError extends boolean = false>(
     ReadAppErrors,
     ThrowOnError
   >({
-    responseType: "json",
     security: [{ scheme: "bearer", type: "http" }],
     url: "/apps/",
     ...options,
@@ -357,7 +351,6 @@ export const createApp = <ThrowOnError extends boolean = false>(
     CreateAppErrors,
     ThrowOnError
   >({
-    responseType: "json",
     security: [{ scheme: "bearer", type: "http" }],
     url: "/apps/",
     ...options,
@@ -378,10 +371,41 @@ export const deleteApp = <ThrowOnError extends boolean = false>(
     DeleteAppErrors,
     ThrowOnError
   >({
-    responseType: "json",
     security: [{ scheme: "bearer", type: "http" }],
     url: "/apps/{app_id}",
     ...options,
+  });
+
+/**
+ * Get App
+ */
+export const getApp = <ThrowOnError extends boolean = false>(
+  options: Options<GetAppData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<GetAppResponses, GetAppErrors, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/apps/{app_id}",
+    ...options,
+  });
+
+/**
+ * Update App
+ */
+export const updateApp = <ThrowOnError extends boolean = false>(
+  options: Options<UpdateAppData, ThrowOnError>,
+) =>
+  (options.client ?? client).patch<
+    UpdateAppResponses,
+    UpdateAppErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/apps/{app_id}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
   });
 
 /**
@@ -397,7 +421,6 @@ export const listThreads = <ThrowOnError extends boolean = false>(
     ListThreadsErrors,
     ThrowOnError
   >({
-    responseType: "json",
     security: [{ scheme: "bearer", type: "http" }],
     url: "/apps/{app_id}/threads",
     ...options,
@@ -416,7 +439,6 @@ export const createThread = <ThrowOnError extends boolean = false>(
     CreateThreadErrors,
     ThrowOnError
   >({
-    responseType: "json",
     security: [{ scheme: "bearer", type: "http" }],
     url: "/apps/{app_id}/threads",
     ...options,
@@ -439,7 +461,6 @@ export const deleteThread = <ThrowOnError extends boolean = false>(
     DeleteThreadErrors,
     ThrowOnError
   >({
-    responseType: "json",
     security: [{ scheme: "bearer", type: "http" }],
     url: "/threads/{thread_id}",
     ...options,
@@ -458,7 +479,6 @@ export const getThread = <ThrowOnError extends boolean = false>(
     GetThreadErrors,
     ThrowOnError
   >({
-    responseType: "json",
     security: [{ scheme: "bearer", type: "http" }],
     url: "/threads/{thread_id}",
     ...options,
@@ -477,7 +497,6 @@ export const updateThread = <ThrowOnError extends boolean = false>(
     UpdateThreadErrors,
     ThrowOnError
   >({
-    responseType: "json",
     security: [{ scheme: "bearer", type: "http" }],
     url: "/threads/{thread_id}",
     ...options,
@@ -501,7 +520,6 @@ export const listMessages = <ThrowOnError extends boolean = false>(
     ListMessagesErrors,
     ThrowOnError
   >({
-    responseType: "json",
     security: [{ scheme: "bearer", type: "http" }],
     url: "/apps/{app_id}/threads/{thread_id}/messages",
     ...options,
@@ -528,7 +546,6 @@ export const createMessage = <ThrowOnError extends boolean = false>(
     CreateMessageErrors,
     ThrowOnError
   >({
-    responseType: "json",
     security: [{ scheme: "bearer", type: "http" }],
     url: "/apps/{app_id}/threads/{thread_id}/messages",
     ...options,
@@ -554,7 +571,6 @@ export const createAssistantMessage = <ThrowOnError extends boolean = false>(
     CreateAssistantMessageErrors,
     ThrowOnError
   >({
-    responseType: "json",
     security: [{ scheme: "bearer", type: "http" }],
     url: "/apps/{app_id}/threads/{thread_id}/messages/assistant",
     ...options,
@@ -577,7 +593,6 @@ export const getMessage = <ThrowOnError extends boolean = false>(
     GetMessageErrors,
     ThrowOnError
   >({
-    responseType: "json",
     security: [{ scheme: "bearer", type: "http" }],
     url: "/messages/{message_id}",
     ...options,

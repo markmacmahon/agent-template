@@ -28,6 +28,11 @@ class AppCreate(AppBase):
     pass
 
 
+class AppUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+
+
 class AppRead(AppBase):
     id: UUID
     user_id: UUID

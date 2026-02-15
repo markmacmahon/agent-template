@@ -109,6 +109,101 @@ class TestApps:
         assert delete_response.status_code == status.HTTP_404_NOT_FOUND
 
     @pytest.mark.asyncio(loop_scope="function")
+    async def test_get_single_app(self, test_client, db_session, authenticated_user):
+        """Test getting a single app by ID."""
+        app_data = {
+            "name": "Single App",
+            "description": "Get me",
+            "user_id": authenticated_user["user"].id,
+        }
+        await db_session.execute(insert(App).values(**app_data))
+        await db_session.commit()
+
+        db_app = (
+            await db_session.execute(select(App).where(App.name == "Single App"))
+        ).scalar()
+
+        response = await test_client.get(
+            f"/apps/{db_app.id}", headers=authenticated_user["headers"]
+        )
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["name"] == "Single App"
+        assert data["description"] == "Get me"
+        assert data["id"] == str(db_app.id)
+
+    @pytest.mark.asyncio(loop_scope="function")
+    async def test_get_single_app_not_found(self, test_client, authenticated_user):
+        """Test getting a non-existent app."""
+        response = await test_client.get(
+            "/apps/00000000-0000-0000-0000-000000000000",
+            headers=authenticated_user["headers"],
+        )
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    @pytest.mark.asyncio(loop_scope="function")
+    async def test_update_app(self, test_client, db_session, authenticated_user):
+        """Test updating an app."""
+        app_data = {
+            "name": "Old Name",
+            "description": "Old Description",
+            "user_id": authenticated_user["user"].id,
+        }
+        await db_session.execute(insert(App).values(**app_data))
+        await db_session.commit()
+
+        db_app = (
+            await db_session.execute(select(App).where(App.name == "Old Name"))
+        ).scalar()
+
+        response = await test_client.patch(
+            f"/apps/{db_app.id}",
+            json={"name": "New Name", "description": "New Description"},
+            headers=authenticated_user["headers"],
+        )
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["name"] == "New Name"
+        assert data["description"] == "New Description"
+
+    @pytest.mark.asyncio(loop_scope="function")
+    async def test_update_app_partial(
+        self, test_client, db_session, authenticated_user
+    ):
+        """Test partially updating an app (only name)."""
+        app_data = {
+            "name": "Partial Name",
+            "description": "Keep This",
+            "user_id": authenticated_user["user"].id,
+        }
+        await db_session.execute(insert(App).values(**app_data))
+        await db_session.commit()
+
+        db_app = (
+            await db_session.execute(select(App).where(App.name == "Partial Name"))
+        ).scalar()
+
+        response = await test_client.patch(
+            f"/apps/{db_app.id}",
+            json={"name": "Changed Name"},
+            headers=authenticated_user["headers"],
+        )
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["name"] == "Changed Name"
+        assert data["description"] == "Keep This"
+
+    @pytest.mark.asyncio(loop_scope="function")
+    async def test_update_app_not_found(self, test_client, authenticated_user):
+        """Test updating a non-existent app."""
+        response = await test_client.patch(
+            "/apps/00000000-0000-0000-0000-000000000000",
+            json={"name": "Nope"},
+            headers=authenticated_user["headers"],
+        )
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_unauthorized_read_apps(self, test_client):
         """Test reading apps without authentication."""
         response = await test_client.get("/apps/")

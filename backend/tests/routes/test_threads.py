@@ -2,11 +2,13 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import App, Thread
+from app.models import App
 
 
 @pytest.mark.asyncio
-async def test_create_thread(test_client: AsyncClient, authenticated_user, db_session: AsyncSession):
+async def test_create_thread(
+    test_client: AsyncClient, authenticated_user, db_session: AsyncSession
+):
     """Test creating a thread for an app."""
     # Create an app first
     app_response = await test_client.post(
@@ -40,7 +42,9 @@ async def test_create_thread(test_client: AsyncClient, authenticated_user, db_se
 
 
 @pytest.mark.asyncio
-async def test_create_thread_unauthorized_app(test_client: AsyncClient, authenticated_user, db_session: AsyncSession):
+async def test_create_thread_unauthorized_app(
+    test_client: AsyncClient, authenticated_user, db_session: AsyncSession
+):
     """Test that creating a thread for someone else's app fails."""
     import uuid
 
@@ -81,7 +85,9 @@ async def test_create_thread_unauthorized_app(test_client: AsyncClient, authenti
 
 
 @pytest.mark.asyncio
-async def test_list_threads(test_client: AsyncClient, authenticated_user, db_session: AsyncSession):
+async def test_list_threads(
+    test_client: AsyncClient, authenticated_user, db_session: AsyncSession
+):
     """Test listing threads for an app."""
     # Create app
     app_response = await test_client.post(
@@ -114,7 +120,9 @@ async def test_list_threads(test_client: AsyncClient, authenticated_user, db_ses
 
 
 @pytest.mark.asyncio
-async def test_list_threads_filter_by_customer(test_client: AsyncClient, authenticated_user, db_session: AsyncSession):
+async def test_list_threads_filter_by_customer(
+    test_client: AsyncClient, authenticated_user, db_session: AsyncSession
+):
     """Test filtering threads by customer_id."""
     # Create app
     app_response = await test_client.post(
@@ -154,7 +162,9 @@ async def test_list_threads_filter_by_customer(test_client: AsyncClient, authent
 
 
 @pytest.mark.asyncio
-async def test_get_thread(test_client: AsyncClient, authenticated_user, db_session: AsyncSession):
+async def test_get_thread(
+    test_client: AsyncClient, authenticated_user, db_session: AsyncSession
+):
     """Test getting a specific thread."""
     # Create app and thread
     app_response = await test_client.post(
@@ -183,7 +193,9 @@ async def test_get_thread(test_client: AsyncClient, authenticated_user, db_sessi
 
 
 @pytest.mark.asyncio
-async def test_update_thread(test_client: AsyncClient, authenticated_user, db_session: AsyncSession):
+async def test_update_thread(
+    test_client: AsyncClient, authenticated_user, db_session: AsyncSession
+):
     """Test updating a thread."""
     # Create app and thread
     app_response = await test_client.post(
@@ -213,7 +225,9 @@ async def test_update_thread(test_client: AsyncClient, authenticated_user, db_se
 
 
 @pytest.mark.asyncio
-async def test_delete_thread(test_client: AsyncClient, authenticated_user, db_session: AsyncSession):
+async def test_delete_thread(
+    test_client: AsyncClient, authenticated_user, db_session: AsyncSession
+):
     """Test deleting a thread."""
     # Create app and thread
     app_response = await test_client.post(

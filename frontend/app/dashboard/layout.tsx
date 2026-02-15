@@ -1,13 +1,8 @@
 import Link from "next/link";
-import { Home, Users2, List, Bot } from "lucide-react";
+import { Bot, List } from "lucide-react";
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import { DashboardBreadcrumb } from "@/components/dashboard-breadcrumb";
+import { BreadcrumbProvider } from "@/components/breadcrumb-context";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,63 +33,34 @@ export default function DashboardLayout({
           >
             <List className="h-5 w-5" />
           </Link>
-          <Link
-            href="/customers"
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
-          >
-            <Users2 className="h-5 w-5" />
-          </Link>
         </div>
       </aside>
-      <main className="ml-16 w-full p-8 bg-muted/40">
-        <header className="flex justify-between items-center mb-6">
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="/" className="flex items-center gap-2">
-                    <Home className="h-4 w-4" />
-                    <span>Home</span>
-                  </Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator>/</BreadcrumbSeparator>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="/dashboard" className="flex items-center gap-2">
-                    <List className="h-4 w-4" />
-                    <span>Dashboard</span>
-                  </Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-          <div className="relative">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center justify-center w-10 h-10 rounded-full bg-muted hover:bg-accent">
-                  <Avatar>
-                    <AvatarFallback>U</AvatarFallback>
-                  </Avatar>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" side="bottom">
-                <DropdownMenuItem>
-                  <Link href="/support" className="block w-full">
-                    Support
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <button onClick={logout} className="block w-full text-left">
-                    Logout
+      <BreadcrumbProvider>
+        <main className="ml-16 w-full p-8 bg-muted/40">
+          <header className="flex justify-between items-center mb-6">
+            <DashboardBreadcrumb />
+            <div className="relative">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center justify-center w-10 h-10 rounded-full bg-muted hover:bg-accent">
+                    <Avatar>
+                      <AvatarFallback>U</AvatarFallback>
+                    </Avatar>
                   </button>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </header>
-        <section className="grid gap-6">{children}</section>
-      </main>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" side="bottom">
+                  <DropdownMenuItem>
+                    <button onClick={logout} className="block w-full text-left">
+                      Logout
+                    </button>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </header>
+          <section className="grid gap-6">{children}</section>
+        </main>
+      </BreadcrumbProvider>
     </div>
   );
 }

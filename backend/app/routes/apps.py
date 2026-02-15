@@ -8,7 +8,7 @@ from sqlalchemy.future import select
 
 from app.database import User, get_async_session
 from app.models import App
-from app.schemas import AppRead, AppCreate
+from app.schemas import AppRead, AppCreate, AppUpdate
 from app.users import current_active_user
 
 router = APIRouter(tags=["app"])
@@ -41,6 +41,47 @@ async def create_app(
     await db.commit()
     await db.refresh(db_app)
     return db_app
+
+
+@router.get("/{app_id}", response_model=AppRead)
+async def get_app(
+    app_id: UUID,
+    db: AsyncSession = Depends(get_async_session),
+    user: User = Depends(current_active_user),
+):
+    result = await db.execute(
+        select(App).filter(App.id == app_id, App.user_id == user.id)
+    )
+    app = result.scalars().first()
+
+    if not app:
+        raise HTTPException(status_code=404, detail="App not found or not authorized")
+
+    return app
+
+
+@router.patch("/{app_id}", response_model=AppRead)
+async def update_app(
+    app_id: UUID,
+    app_update: AppUpdate,
+    db: AsyncSession = Depends(get_async_session),
+    user: User = Depends(current_active_user),
+):
+    result = await db.execute(
+        select(App).filter(App.id == app_id, App.user_id == user.id)
+    )
+    app = result.scalars().first()
+
+    if not app:
+        raise HTTPException(status_code=404, detail="App not found or not authorized")
+
+    update_data = app_update.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(app, field, value)
+
+    await db.commit()
+    await db.refresh(app)
+    return app
 
 
 @router.delete("/{app_id}")

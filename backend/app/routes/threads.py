@@ -28,9 +28,7 @@ async def get_app_by_id(
     app = result.scalars().first()
 
     if not app:
-        raise HTTPException(
-            status_code=404, detail="App not found or not authorized"
-        )
+        raise HTTPException(status_code=404, detail="App not found or not authorized")
 
     return app
 

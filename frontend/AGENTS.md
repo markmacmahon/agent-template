@@ -9,9 +9,12 @@ Read the root `AGENTS.md` first for project-wide principles (TDD workflow, archi
 - Next.js 16+ (App Router, not Pages Router)
 - React 19+
 - TypeScript (strict -- avoid `any`)
-- shadcn/ui + Tailwind CSS for UI components
+- Tailwind CSS v4 (CSS-first config in `globals.css`, no `tailwind.config.js`)
+- shadcn/ui components + unified `radix-ui` package (not individual `@radix-ui/react-*`)
+- `lucide-react` for icons (not `@radix-ui/react-icons`)
 - OpenAPI-generated type-safe API client (`@hey-api/openapi-ts`)
 - Zod for runtime validation
+- PostCSS via `postcss.config.mjs` (ESM)
 - **Package manager: pnpm** (never npm or yarn)
 
 ## Directory Layout
@@ -109,7 +112,7 @@ Naming rules:
 - **Actions** (`components/actions/`) -- server actions for form submissions and mutations.
 - **lib/** -- pure utility functions and configuration. Easy to test.
 - **openapi-client/** -- auto-generated from backend OpenAPI schema. **Never edit by hand.**
-- **ui/** -- shadcn/ui components. Add new ones via `npx shadcn-ui@latest add <component>`, don't write from scratch.
+- **ui/** -- shadcn/ui components. Add new ones via `pnpm dlx shadcn@latest add <component>`, don't write from scratch. These use the unified `radix-ui` package and `lucide-react` icons.
 
 ## Type Safety
 
