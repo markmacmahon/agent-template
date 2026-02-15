@@ -2,9 +2,24 @@
 
 ## Current Status
 
-**STABLE** — All tests passing (132 backend, 167 frontend, 2 E2E), `make precommit` clean.
+**STABLE** — All tests passing (132 backend, 167 frontend, 6 E2E), `make precommit` clean.
 
 ## Recent Changes
+
+### 2026-02-15 (Evening) - Boyscout Rule & SSE Refetch Bug Fix
+
+- **Boyscout rule** added to `AGENTS.md`
+  - ✅ Added as #7 in Non-Negotiables: "always fix issues when you find them, unless explicitly told otherwise"
+  - ✅ Integrated into AI agent workflow section
+- **Critical SSE message refetch bug fixed**
+  - ✅ Fixed React stale closure in `chat-container.tsx` where `onMessageComplete` callback captured outdated `selectedThreadId` (null)
+  - ✅ Changed to use `message.thread_id` from parameter instead of closure
+  - ✅ Assistant messages now appear correctly after streaming completes
+  - ✅ All 6 E2E tests passing (was 3 failing)
+- **Code cleanup**
+  - ✅ Removed unused `refetchMessages` callback
+  - ✅ Removed unused `SSEMetaEvent` type
+  - ✅ Removed debug console.log statements
 
 ### 2026-02-15 (Late PM) - i18n, Lint Cleanup & E2E Fix
 
@@ -98,8 +113,8 @@ The frontend `translateError()` in `i18n/keys.ts` maps these to English. This ke
 |-------|-------|
 | Backend (pytest) | 132 |
 | Frontend (jest) | 167 |
-| E2E (playwright) | 2 |
-| **Total** | **301** |
+| E2E (playwright) | 6 |
+| **Total** | **305** |
 
 ## Upcoming
 
