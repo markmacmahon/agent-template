@@ -16,6 +16,20 @@ export type AppCreate = {
    * Description
    */
   description?: string | null;
+  /**
+   * Webhook Url
+   */
+  webhook_url?: string | null;
+  /**
+   * Webhook Secret
+   */
+  webhook_secret?: string | null;
+  /**
+   * Config Json
+   */
+  config_json?: {
+    [key: string]: unknown;
+  };
 };
 
 /**
@@ -38,6 +52,20 @@ export type AppRead = {
    * User Id
    */
   user_id: string;
+  /**
+   * Webhook Url
+   */
+  webhook_url?: string | null;
+  /**
+   * Webhook Secret
+   */
+  webhook_secret?: string | null;
+  /**
+   * Config Json
+   */
+  config_json?: {
+    [key: string]: unknown;
+  };
 };
 
 /**
@@ -52,6 +80,20 @@ export type AppUpdate = {
    * Description
    */
   description?: string | null;
+  /**
+   * Webhook Url
+   */
+  webhook_url?: string | null;
+  /**
+   * Webhook Secret
+   */
+  webhook_secret?: string | null;
+  /**
+   * Config Json
+   */
+  config_json?: {
+    [key: string]: unknown;
+  } | null;
 };
 
 /**
@@ -243,6 +285,21 @@ export type PageThreadRead = {
 };
 
 /**
+ * RunResponse
+ */
+export type RunResponse = {
+  /**
+   * Status
+   */
+  status: "completed" | "error";
+  assistant_message?: MessageRead | null;
+  /**
+   * Error
+   */
+  error?: string | null;
+};
+
+/**
  * ThreadCreate
  */
 export type ThreadCreate = {
@@ -398,6 +455,52 @@ export type ValidationError = {
    * Error Type
    */
   type: string;
+};
+
+/**
+ * WebhookTestRequest
+ */
+export type WebhookTestRequest = {
+  /**
+   * Webhook Url
+   */
+  webhook_url: string;
+  /**
+   * Sample Message
+   */
+  sample_message?: string | null;
+};
+
+/**
+ * WebhookTestResponse
+ */
+export type WebhookTestResponse = {
+  /**
+   * Ok
+   */
+  ok: boolean;
+  /**
+   * Status Code
+   */
+  status_code?: number | null;
+  /**
+   * Latency Ms
+   */
+  latency_ms?: number;
+  /**
+   * Error
+   */
+  error?: string | null;
+  /**
+   * Response Json
+   */
+  response_json?: {
+    [key: string]: unknown;
+  } | null;
+  /**
+   * Response Text
+   */
+  response_text?: string | null;
 };
 
 /**
@@ -1288,3 +1391,100 @@ export type GetMessageResponses = {
 };
 
 export type GetMessageResponse = GetMessageResponses[keyof GetMessageResponses];
+
+export type RunSyncData = {
+  body?: never;
+  path: {
+    /**
+     * App Id
+     */
+    app_id: string;
+    /**
+     * Thread Id
+     */
+    thread_id: string;
+  };
+  query?: never;
+  url: "/apps/{app_id}/threads/{thread_id}/run";
+};
+
+export type RunSyncErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RunSyncError = RunSyncErrors[keyof RunSyncErrors];
+
+export type RunSyncResponses = {
+  /**
+   * Successful Response
+   */
+  200: RunResponse;
+};
+
+export type RunSyncResponse = RunSyncResponses[keyof RunSyncResponses];
+
+export type RunStreamData = {
+  body?: never;
+  path: {
+    /**
+     * App Id
+     */
+    app_id: string;
+    /**
+     * Thread Id
+     */
+    thread_id: string;
+  };
+  query?: never;
+  url: "/apps/{app_id}/threads/{thread_id}/run/stream";
+};
+
+export type RunStreamErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RunStreamError = RunStreamErrors[keyof RunStreamErrors];
+
+export type RunStreamResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type WebhookTestData = {
+  body: WebhookTestRequest;
+  path: {
+    /**
+     * App Id
+     */
+    app_id: string;
+  };
+  query?: never;
+  url: "/apps/{app_id}/webhook/test";
+};
+
+export type WebhookTestErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type WebhookTestError = WebhookTestErrors[keyof WebhookTestErrors];
+
+export type WebhookTestResponses = {
+  /**
+   * Successful Response
+   */
+  200: WebhookTestResponse;
+};
+
+export type WebhookTestResponse2 =
+  WebhookTestResponses[keyof WebhookTestResponses];

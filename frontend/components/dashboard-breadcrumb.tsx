@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, List } from "lucide-react";
 
 import {
   Breadcrumb,
@@ -18,63 +17,75 @@ interface DashboardBreadcrumbProps {
   pageTitle?: string;
 }
 
+/**
+ * Build breadcrumb trail based on the current pathname.
+ *
+ * Examples:
+ *   /dashboard               → Dashboard
+ *   /dashboard/apps          → Dashboard / Apps
+ *   /dashboard/apps/new      → Dashboard / Apps / New App
+ *   /dashboard/apps/:id/edit → Dashboard / Apps / <App Name>
+ */
 export function DashboardBreadcrumb({ pageTitle }: DashboardBreadcrumbProps) {
   const pathname = usePathname();
   const { pageTitle: contextTitle } = usePageTitle();
 
-  const tail = resolvePageLabel(pathname, pageTitle ?? contextTitle);
+  const crumbs = buildCrumbs(pathname, pageTitle ?? contextTitle);
 
   return (
     <Breadcrumb>
       <BreadcrumbList>
-        <BreadcrumbItem>
-          <BreadcrumbLink asChild>
-            <Link href="/" className="flex items-center gap-2">
-              <Home className="h-4 w-4" />
-              <span>Home</span>
-            </Link>
-          </BreadcrumbLink>
-        </BreadcrumbItem>
-        <BreadcrumbSeparator>/</BreadcrumbSeparator>
-
-        {tail ? (
-          <>
+        {crumbs.map((crumb, i) => (
+          <span key={crumb.label} className="contents">
+            {i > 0 && <BreadcrumbSeparator>/</BreadcrumbSeparator>}
             <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/dashboard" className="flex items-center gap-2">
-                  <List className="h-4 w-4" />
-                  <span>Dashboard</span>
-                </Link>
-              </BreadcrumbLink>
+              {i < crumbs.length - 1 ? (
+                <BreadcrumbLink asChild>
+                  <Link href={crumb.href}>{crumb.label}</Link>
+                </BreadcrumbLink>
+              ) : (
+                <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+              )}
             </BreadcrumbItem>
-            <BreadcrumbSeparator>/</BreadcrumbSeparator>
-            <BreadcrumbItem>
-              <BreadcrumbPage>{tail}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </>
-        ) : (
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/dashboard" className="flex items-center gap-2">
-                <List className="h-4 w-4" />
-                <span>Dashboard</span>
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-        )}
+          </span>
+        ))}
       </BreadcrumbList>
     </Breadcrumb>
   );
 }
 
-function resolvePageLabel(pathname: string, pageTitle?: string): string | null {
-  if (pathname === "/dashboard/apps/new") {
-    return "New App";
+interface Crumb {
+  label: string;
+  href: string;
+}
+
+function buildCrumbs(pathname: string, pageTitle?: string): Crumb[] {
+  const crumbs: Crumb[] = [{ label: "Dashboard", href: "/dashboard" }];
+
+  if (pathname === "/dashboard") {
+    return crumbs;
   }
 
-  if (pathname.match(/^\/dashboard\/apps\/[^/]+\/edit$/)) {
-    return pageTitle ?? "Edit App";
+  if (pathname.startsWith("/dashboard/apps")) {
+    crumbs.push({ label: "Apps", href: "/dashboard/apps" });
+
+    if (pathname === "/dashboard/apps") {
+      return crumbs;
+    }
+
+    if (pathname === "/dashboard/apps/new") {
+      crumbs.push({ label: "New App", href: pathname });
+      return crumbs;
+    }
+
+    if (pathname.match(/^\/dashboard\/apps\/[^/]+\/edit$/)) {
+      crumbs.push({
+        label: pageTitle ?? "Edit App",
+        href: pathname,
+      });
+      return crumbs;
+    }
   }
 
-  return null;
+  return crumbs;
 }

@@ -7,11 +7,20 @@ import { fetchAppById } from "@/components/actions/apps-action";
 
 jest.mock("../../components/actions/apps-action", () => ({
   fetchAppById: jest.fn().mockResolvedValue({
-    id: "app-123",
-    name: "Test App",
-    description: "Test Description",
+    data: {
+      id: "app-123",
+      name: "Test App",
+      description: "Test Description",
+      webhook_url: "https://example.com/hook",
+      config_json: { integration: { mode: "webhook" } },
+    },
   }),
   editApp: jest.fn(),
+  testWebhook: jest.fn(),
+}));
+
+jest.mock("sonner", () => ({
+  toast: { error: jest.fn() },
 }));
 
 const mockFetchAppById = fetchAppById as jest.Mock;
@@ -58,12 +67,30 @@ describe("Edit App Page", () => {
     expect(screen.getByLabelText(/app description/i)).toBeRequired();
   });
 
-  it("shows error message when app is not found", async () => {
-    mockFetchAppById.mockResolvedValueOnce({ message: "NOT_FOUND" });
+  it("renders segmented control with Webhook selected", async () => {
+    const page = await EditAppPage({ params: defaultParams });
+    render(page);
+
+    const webhookBtn = screen.getByRole("button", { name: "Webhook" });
+    expect(webhookBtn).toBeInTheDocument();
+  });
+
+  it("renders webhook URL input with pre-filled value", async () => {
+    const page = await EditAppPage({ params: defaultParams });
+    render(page);
+
+    const input = screen.getByLabelText(/webhook url/i) as HTMLInputElement;
+    expect(input).toBeInTheDocument();
+    expect(input.value).toBe("https://example.com/hook");
+  });
+
+  it("shows fallback message with back link on error", async () => {
+    mockFetchAppById.mockResolvedValueOnce({ error: "NOT_FOUND" });
 
     const page = await EditAppPage({ params: defaultParams });
     render(page);
 
-    expect(screen.getByText("App not found.")).toBeInTheDocument();
+    expect(screen.getByText("Could not load app.")).toBeInTheDocument();
+    expect(screen.getByText("Back to apps")).toBeInTheDocument();
   });
 });

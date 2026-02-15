@@ -5,7 +5,7 @@ import "@testing-library/jest-dom";
 import { PagePagination } from "@/components/page-pagination";
 
 describe("PagePagination", () => {
-  it("renders page info text", () => {
+  it("renders range info text", () => {
     render(
       <PagePagination
         currentPage={1}
@@ -15,10 +15,7 @@ describe("PagePagination", () => {
       />,
     );
 
-    expect(screen.getByText(/page 1 of 5/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/showing 1 to 10 of 50 results/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText("1–10 of 50")).toBeInTheDocument();
   });
 
   it("disables previous buttons on first page", () => {
@@ -79,7 +76,7 @@ describe("PagePagination", () => {
       />,
     );
 
-    expect(screen.getByText(/showing 0 of 0 results/i)).toBeInTheDocument();
+    expect(screen.getByText("0 results")).toBeInTheDocument();
   });
 
   it("builds correct URLs with custom basePath", () => {

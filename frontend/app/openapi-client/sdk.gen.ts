@@ -59,6 +59,12 @@ import type {
   ResetResetPasswordData,
   ResetResetPasswordErrors,
   ResetResetPasswordResponses,
+  RunStreamData,
+  RunStreamErrors,
+  RunStreamResponses,
+  RunSyncData,
+  RunSyncErrors,
+  RunSyncResponses,
   UpdateAppData,
   UpdateAppErrors,
   UpdateAppResponses,
@@ -86,6 +92,9 @@ import type {
   VerifyVerifyData,
   VerifyVerifyErrors,
   VerifyVerifyResponses,
+  WebhookTestData,
+  WebhookTestErrors,
+  WebhookTestResponses,
 } from "./types.gen";
 
 export type Options<
@@ -596,4 +605,66 @@ export const getMessage = <ThrowOnError extends boolean = false>(
     security: [{ scheme: "bearer", type: "http" }],
     url: "/messages/{message_id}",
     ...options,
+  });
+
+/**
+ * Run Sync
+ *
+ * Run the orchestrator synchronously and return JSON result.
+ */
+export const runSync = <ThrowOnError extends boolean = false>(
+  options: Options<RunSyncData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<
+    RunSyncResponses,
+    RunSyncErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/apps/{app_id}/threads/{thread_id}/run",
+    ...options,
+  });
+
+/**
+ * Run Stream
+ *
+ * Run the orchestrator and stream the response as SSE.
+ *
+ * If the partner returns SSE (text/event-stream), their stream is proxied
+ * directly to the client. Otherwise, the orchestrator generates simulator
+ * chunks locally.
+ */
+export const runStream = <ThrowOnError extends boolean = false>(
+  options: Options<RunStreamData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<
+    RunStreamResponses,
+    RunStreamErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/apps/{app_id}/threads/{thread_id}/run/stream",
+    ...options,
+  });
+
+/**
+ * Webhook Test
+ *
+ * Test a webhook URL with a sample payload. Does NOT persist any messages.
+ */
+export const webhookTest = <ThrowOnError extends boolean = false>(
+  options: Options<WebhookTestData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<
+    WebhookTestResponses,
+    WebhookTestErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/apps/{app_id}/webhook/test",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
   });

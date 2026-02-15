@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import { screen, fireEvent, waitFor } from "@testing-library/dom";
 import "@testing-library/jest-dom";
 
-import { DeleteButton } from "@/app/dashboard/deleteButton";
+import { DeleteButton } from "@/app/dashboard/apps/delete-button";
 import { removeApp } from "@/components/actions/apps-action";
 import {
   DropdownMenu,

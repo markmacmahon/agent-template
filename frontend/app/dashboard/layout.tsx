@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bot, List } from "lucide-react";
+import { Bot, Blocks } from "lucide-react";
 
 import { DashboardBreadcrumb } from "@/components/dashboard-breadcrumb";
 import { BreadcrumbProvider } from "@/components/breadcrumb-context";
@@ -22,16 +22,18 @@ export default function DashboardLayout({
       <aside className="fixed inset-y-0 left-0 z-10 w-16 flex flex-col border-r bg-background p-4">
         <div className="flex flex-col items-center gap-8">
           <Link
-            href="/"
+            href="/dashboard"
+            title="Dashboard"
             className="flex items-center justify-center rounded-full bg-primary/10 p-3 transition-all duration-200 hover:scale-105 hover:bg-primary/20"
           >
             <Bot className="h-8 w-8 text-primary" />
           </Link>
           <Link
-            href="/dashboard"
+            href="/dashboard/apps"
+            title="Apps"
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
           >
-            <List className="h-5 w-5" />
+            <Blocks className="h-5 w-5" />
           </Link>
         </div>
       </aside>

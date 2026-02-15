@@ -22,20 +22,28 @@ describe("DashboardBreadcrumb", () => {
     mockPageTitle.mockReturnValue(undefined);
   });
 
-  it("renders Home and Dashboard on /dashboard", () => {
+  it("renders only Dashboard on /dashboard", () => {
     mockPathname.mockReturnValue("/dashboard");
     render(<DashboardBreadcrumb />);
 
-    expect(screen.getByText("Home")).toBeInTheDocument();
     expect(screen.getByText("Dashboard")).toBeInTheDocument();
+    expect(screen.queryByText("Home")).not.toBeInTheDocument();
+  });
+
+  it("renders Dashboard > Apps on /dashboard/apps", () => {
+    mockPathname.mockReturnValue("/dashboard/apps");
+    render(<DashboardBreadcrumb />);
+
+    expect(screen.getByText("Dashboard")).toBeInTheDocument();
+    expect(screen.getByText("Apps")).toBeInTheDocument();
   });
 
   it('renders "New App" breadcrumb on /dashboard/apps/new', () => {
     mockPathname.mockReturnValue("/dashboard/apps/new");
     render(<DashboardBreadcrumb />);
 
-    expect(screen.getByText("Home")).toBeInTheDocument();
     expect(screen.getByText("Dashboard")).toBeInTheDocument();
+    expect(screen.getByText("Apps")).toBeInTheDocument();
     expect(screen.getByText("New App")).toBeInTheDocument();
   });
 
@@ -46,8 +54,8 @@ describe("DashboardBreadcrumb", () => {
     mockPageTitle.mockReturnValue("My Cool App");
     render(<DashboardBreadcrumb />);
 
-    expect(screen.getByText("Home")).toBeInTheDocument();
     expect(screen.getByText("Dashboard")).toBeInTheDocument();
+    expect(screen.getByText("Apps")).toBeInTheDocument();
     expect(screen.getByText("My Cool App")).toBeInTheDocument();
   });
 
@@ -57,17 +65,25 @@ describe("DashboardBreadcrumb", () => {
     );
     render(<DashboardBreadcrumb />);
 
-    expect(screen.getByText("Home")).toBeInTheDocument();
     expect(screen.getByText("Dashboard")).toBeInTheDocument();
+    expect(screen.getByText("Apps")).toBeInTheDocument();
     expect(screen.getByText("Edit App")).toBeInTheDocument();
   });
 
   it("makes Dashboard a link back to /dashboard", () => {
-    mockPathname.mockReturnValue("/dashboard/apps/new");
+    mockPathname.mockReturnValue("/dashboard/apps");
     render(<DashboardBreadcrumb />);
 
     const dashboardLink = screen.getByText("Dashboard").closest("a");
     expect(dashboardLink).toHaveAttribute("href", "/dashboard");
+  });
+
+  it("makes Apps a link back to /dashboard/apps", () => {
+    mockPathname.mockReturnValue("/dashboard/apps/new");
+    render(<DashboardBreadcrumb />);
+
+    const appsLink = screen.getByText("Apps").closest("a");
+    expect(appsLink).toHaveAttribute("href", "/dashboard/apps");
   });
 
   it("renders the last breadcrumb item as non-link (current page)", () => {

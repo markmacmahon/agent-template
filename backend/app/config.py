@@ -46,6 +46,10 @@ class Settings(BaseSettings):
     # Frontend
     FRONTEND_URL: str = "http://localhost:3000"
 
+    # Webhook header names (override to brand your headers)
+    WEBHOOK_HEADER_APP_ID: str = "X-App-Id"
+    WEBHOOK_HEADER_THREAD_ID: str = "X-Thread-Id"
+
     # CORS - Safe default for local development
     CORS_ORIGINS: Set[str] = {"http://localhost:3000", "http://localhost:8000"}
 

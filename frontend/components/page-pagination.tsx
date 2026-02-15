@@ -20,7 +20,7 @@ export function PagePagination({
   totalPages,
   pageSize,
   totalItems,
-  basePath = "/dashboard",
+  basePath = "/dashboard/apps",
 }: PagePaginationProps) {
   const hasNextPage = currentPage < totalPages;
   const hasPreviousPage = currentPage > 1;
@@ -29,67 +29,68 @@ export function PagePagination({
     `${basePath}?page=${page}&size=${pageSize}`;
 
   return (
-    <div className="flex items-center justify-between my-4">
-      <div className="text-sm text-muted-foreground">
-        {totalItems === 0 ? (
-          <>Showing 0 of 0 results</>
-        ) : (
-          <>
-            Showing {(currentPage - 1) * pageSize + 1} to{" "}
-            {Math.min(currentPage * pageSize, totalItems)} of {totalItems}{" "}
-            results
-          </>
-        )}
-      </div>
+    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+      <span className="mr-2 whitespace-nowrap">
+        {totalItems === 0
+          ? "0 results"
+          : `${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, totalItems)} of ${totalItems}`}
+      </span>
 
-      <div className="flex items-center space-x-2">
-        {/* First Page */}
-        <Link
-          href={buildUrl(1)}
-          className={!hasPreviousPage ? "pointer-events-none opacity-50" : ""}
+      <Link
+        href={buildUrl(1)}
+        className={!hasPreviousPage ? "pointer-events-none opacity-50" : ""}
+      >
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          disabled={!hasPreviousPage}
         >
-          <Button variant="outline" size="sm" disabled={!hasPreviousPage}>
-            <ChevronsLeft className="h-4 w-4" />
-          </Button>
-        </Link>
+          <ChevronsLeft className="h-4 w-4" />
+        </Button>
+      </Link>
 
-        {/* Previous Page */}
-        <Link
-          href={buildUrl(currentPage - 1)}
-          className={!hasPreviousPage ? "pointer-events-none opacity-50" : ""}
+      <Link
+        href={buildUrl(currentPage - 1)}
+        className={!hasPreviousPage ? "pointer-events-none opacity-50" : ""}
+      >
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          disabled={!hasPreviousPage}
         >
-          <Button variant="outline" size="sm" disabled={!hasPreviousPage}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-        </Link>
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+      </Link>
 
-        {/* Page Info */}
-        {totalPages > 0 && (
-          <span className="text-sm font-medium">
-            Page {currentPage} of {totalPages}
-          </span>
-        )}
-
-        {/* Next Page */}
-        <Link
-          href={buildUrl(currentPage + 1)}
-          className={hasNextPage ? "" : "pointer-events-none opacity-50"}
+      <Link
+        href={buildUrl(currentPage + 1)}
+        className={hasNextPage ? "" : "pointer-events-none opacity-50"}
+      >
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          disabled={!hasNextPage}
         >
-          <Button variant="outline" size="sm" disabled={!hasNextPage}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </Link>
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </Link>
 
-        {/* Last Page */}
-        <Link
-          href={buildUrl(totalPages)}
-          className={hasNextPage ? "" : "pointer-events-none opacity-50"}
+      <Link
+        href={buildUrl(totalPages)}
+        className={hasNextPage ? "" : "pointer-events-none opacity-50"}
+      >
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          disabled={!hasNextPage}
         >
-          <Button variant="outline" size="sm" disabled={!hasNextPage}>
-            <ChevronsRight className="h-4 w-4" />
-          </Button>
-        </Link>
-      </div>
+          <ChevronsRight className="h-4 w-4" />
+        </Button>
+      </Link>
     </div>
   );
 }

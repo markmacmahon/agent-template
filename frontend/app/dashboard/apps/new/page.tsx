@@ -1,15 +1,22 @@
 "use client";
 
+import { useState, useActionState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { addApp } from "@/components/actions/apps-action";
-import { useActionState } from "react";
 import { SubmitButton } from "@/components/ui/submitButton";
 
 const initialState = { message: "" };
 
 export default function CreateAppPage() {
   const [state, dispatch] = useActionState(addApp, initialState);
+  const [selectedMode, setSelectedMode] = useState<string>("simulator");
+  const [webhookUrl, setWebhookUrl] = useState("");
+
+  const webhookUrlWarning =
+    selectedMode === "webhook" && !webhookUrl
+      ? "No webhook configured. Simulator will be used until you add one."
+      : null;
 
   return (
     <div className="min-h-screen">
@@ -25,7 +32,7 @@ export default function CreateAppPage() {
 
         <form
           action={dispatch}
-          className="bg-card rounded-lg shadow-lg p-8 space-y-6"
+          className="bg-card rounded-lg shadow-lg p-8 space-y-8"
         >
           <div className="space-y-6">
             <div className="space-y-3">
@@ -60,6 +67,64 @@ export default function CreateAppPage() {
               )}
             </div>
           </div>
+
+          {/* Integration mode */}
+          <div className="space-y-4 border-t border-border pt-6">
+            <h2 className="text-lg font-semibold">Integration</h2>
+
+            <div className="flex gap-0 rounded-md border border-input overflow-hidden w-fit">
+              {(["simulator", "webhook"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setSelectedMode(mode)}
+                  className={`px-4 py-2 text-sm font-medium transition-colors ${
+                    selectedMode === mode
+                      ? "bg-foreground text-background"
+                      : "bg-background text-foreground hover:bg-muted"
+                  }`}
+                >
+                  {mode === "simulator" ? "Simulator" : "Webhook"}
+                </button>
+              ))}
+            </div>
+            <input type="hidden" name="integration_mode" value={selectedMode} />
+
+            <p className="text-sm text-muted-foreground">
+              {selectedMode === "simulator"
+                ? "Use built-in simulated replies for dashboard testing."
+                : "We will POST each customer message to your webhook and expect a JSON reply."}
+            </p>
+          </div>
+
+          {/* Webhook URL (only if webhook) */}
+          {selectedMode === "webhook" && (
+            <div className="space-y-4 border-t border-border pt-6">
+              <h2 className="text-lg font-semibold">Webhook URL</h2>
+              <Input
+                id="webhook_url"
+                name="webhook_url"
+                type="url"
+                placeholder="https://your-service.com/webhook"
+                value={webhookUrl}
+                onChange={(e) => setWebhookUrl(e.target.value)}
+                className="w-full"
+              />
+              {webhookUrlWarning && (
+                <p className="text-sm text-amber-600">{webhookUrlWarning}</p>
+              )}
+              {state.errors?.webhook_url && (
+                <p className="text-destructive text-sm">
+                  {state.errors.webhook_url}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Hidden webhook_url for simulator mode */}
+          {selectedMode !== "webhook" && (
+            <input type="hidden" name="webhook_url" value="" />
+          )}
 
           <SubmitButton text="Create App" />
 

@@ -223,3 +223,65 @@ class TestApps:
             "/apps/00000000-0000-0000-0000-000000000000"
         )
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.asyncio(loop_scope="function")
+    async def test_create_app_with_config(self, test_client, authenticated_user):
+        """Test creating an app with webhook and integration config."""
+        app_data = {
+            "name": "Configured App",
+            "description": "Has integration config",
+            "webhook_url": "https://example.com/webhook",
+            "config_json": {
+                "integration": {"mode": "webhook"},
+                "webhook": {"timeout_ms": 5000},
+            },
+        }
+        response = await test_client.post(
+            "/apps/", json=app_data, headers=authenticated_user["headers"]
+        )
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["webhook_url"] == "https://example.com/webhook"
+        assert data["config_json"]["integration"]["mode"] == "webhook"
+        assert data["config_json"]["webhook"]["timeout_ms"] == 5000
+
+    @pytest.mark.asyncio(loop_scope="function")
+    async def test_update_app_config(self, test_client, db_session, authenticated_user):
+        """Test updating app integration config."""
+        # Create app
+        create_response = await test_client.post(
+            "/apps/",
+            json={"name": "Plain App"},
+            headers=authenticated_user["headers"],
+        )
+        app_id = create_response.json()["id"]
+
+        # Update with config
+        update_response = await test_client.patch(
+            f"/apps/{app_id}",
+            json={
+                "webhook_url": "https://hook.example.com/api",
+                "config_json": {
+                    "integration": {"mode": "webhook"},
+                    "simulator": {"scenario": "ecommerce_support"},
+                },
+            },
+            headers=authenticated_user["headers"],
+        )
+        assert update_response.status_code == status.HTTP_200_OK
+        data = update_response.json()
+        assert data["webhook_url"] == "https://hook.example.com/api"
+        assert data["config_json"]["integration"]["mode"] == "webhook"
+
+    @pytest.mark.asyncio(loop_scope="function")
+    async def test_app_defaults_empty_config(self, test_client, authenticated_user):
+        """Test that a new app defaults to empty config_json."""
+        response = await test_client.post(
+            "/apps/",
+            json={"name": "Default App"},
+            headers=authenticated_user["headers"],
+        )
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["config_json"] == {}
+        assert data["webhook_url"] is None

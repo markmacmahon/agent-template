@@ -22,6 +22,15 @@ describe("Create App Page", () => {
     expect(screen.getByLabelText(/app description/i)).toBeInTheDocument();
   });
 
+  it("renders segmented control with Simulator selected by default", () => {
+    render(<CreateAppPage />);
+
+    const simulatorBtn = screen.getByRole("button", { name: "Simulator" });
+    const webhookBtn = screen.getByRole("button", { name: "Webhook" });
+    expect(simulatorBtn).toBeInTheDocument();
+    expect(webhookBtn).toBeInTheDocument();
+  });
+
   it("renders the submit button", () => {
     render(<CreateAppPage />);
 
@@ -30,7 +39,7 @@ describe("Create App Page", () => {
     ).toBeInTheDocument();
   });
 
-  it("has required attributes on inputs", () => {
+  it("has required attributes on name and description", () => {
     render(<CreateAppPage />);
 
     expect(screen.getByLabelText(/app name/i)).toBeRequired();

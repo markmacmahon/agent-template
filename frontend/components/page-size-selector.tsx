@@ -18,7 +18,7 @@ export function PageSizeSelector({ currentSize }: PageSizeSelectorProps) {
   const pageSizeOptions = [5, 10, 20, 50, 100];
 
   const handleSizeChange = (newSize: string) => {
-    router.push(`/dashboard?page=1&size=${newSize}`);
+    router.push(`/dashboard/apps?page=1&size=${newSize}`);
   };
 
   return (

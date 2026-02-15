@@ -63,7 +63,7 @@ describe("fetchApps", () => {
       query: { page: 1, size: 10 },
       headers: { Authorization: "Bearer test-token" },
     });
-    expect(result).toEqual(mockData);
+    expect(result).toEqual({ data: mockData });
   });
 
   it("returns error when no access token", async () => {
@@ -73,7 +73,7 @@ describe("fetchApps", () => {
     const result = await fetchApps();
 
     expect(readApp).not.toHaveBeenCalled();
-    expect(result).toEqual({ message: "No access token found" });
+    expect(result).toEqual({ error: "No access token found" });
   });
 
   it("returns error message on API failure", async () => {
@@ -87,7 +87,20 @@ describe("fetchApps", () => {
 
     const result = await fetchApps();
 
-    expect(result).toEqual({ message: "FORBIDDEN" });
+    expect(result).toEqual({ error: "FORBIDDEN" });
+  });
+
+  it("returns error when API call throws", async () => {
+    const mockCookieStore = await cookies();
+    (mockCookieStore.get as jest.Mock).mockReturnValue({
+      value: "test-token",
+    });
+
+    (readApp as jest.Mock).mockRejectedValue(new Error("Network failure"));
+
+    const result = await fetchApps();
+
+    expect(result).toEqual({ error: "Network failure" });
   });
 
   it("uses default page and size parameters", async () => {
@@ -126,7 +139,7 @@ describe("removeApp", () => {
       headers: { Authorization: "Bearer test-token" },
       path: { app_id: "app-123" },
     });
-    expect(revalidatePath).toHaveBeenCalledWith("/dashboard");
+    expect(revalidatePath).toHaveBeenCalledWith("/dashboard/apps");
   });
 
   it("returns error when no access token", async () => {
@@ -171,14 +184,48 @@ describe("addApp", () => {
     const formData = new FormData();
     formData.set("name", "My App");
     formData.set("description", "My app description");
+    formData.set("integration_mode", "simulator");
+    formData.set("webhook_url", "");
 
     await addApp({}, formData);
 
     expect(createApp).toHaveBeenCalledWith({
       headers: { Authorization: "Bearer test-token" },
-      body: { name: "My App", description: "My app description" },
+      body: {
+        name: "My App",
+        description: "My app description",
+        webhook_url: null,
+        config_json: { integration: { mode: "simulator" } },
+      },
     });
-    expect(redirect).toHaveBeenCalledWith("/dashboard");
+    expect(redirect).toHaveBeenCalledWith("/dashboard/apps");
+  });
+
+  it("creates an app with webhook config", async () => {
+    const mockCookieStore = await cookies();
+    (mockCookieStore.get as jest.Mock).mockReturnValue({
+      value: "test-token",
+    });
+
+    (createApp as jest.Mock).mockResolvedValue({});
+
+    const formData = new FormData();
+    formData.set("name", "Webhook App");
+    formData.set("description", "Uses webhooks");
+    formData.set("integration_mode", "webhook");
+    formData.set("webhook_url", "https://example.com/hook");
+
+    await addApp({}, formData);
+
+    expect(createApp).toHaveBeenCalledWith({
+      headers: { Authorization: "Bearer test-token" },
+      body: {
+        name: "Webhook App",
+        description: "Uses webhooks",
+        webhook_url: "https://example.com/hook",
+        config_json: { integration: { mode: "webhook" } },
+      },
+    });
   });
 
   it("returns error when no access token", async () => {
@@ -257,7 +304,7 @@ describe("fetchAppById", () => {
       path: { app_id: "app-1" },
       headers: { Authorization: "Bearer test-token" },
     });
-    expect(result).toEqual(mockData);
+    expect(result).toEqual({ data: mockData });
   });
 
   it("returns error when no access token", async () => {
@@ -267,7 +314,7 @@ describe("fetchAppById", () => {
     const result = await fetchAppById("app-1");
 
     expect(getApp).not.toHaveBeenCalled();
-    expect(result).toEqual({ message: "No access token found" });
+    expect(result).toEqual({ error: "No access token found" });
   });
 
   it("returns error message on API failure", async () => {
@@ -280,7 +327,20 @@ describe("fetchAppById", () => {
 
     const result = await fetchAppById("app-1");
 
-    expect(result).toEqual({ message: "NOT_FOUND" });
+    expect(result).toEqual({ error: "NOT_FOUND" });
+  });
+
+  it("returns error when API call throws", async () => {
+    const mockCookieStore = await cookies();
+    (mockCookieStore.get as jest.Mock).mockReturnValue({
+      value: "test-token",
+    });
+
+    (getApp as jest.Mock).mockRejectedValue(new Error("Connection refused"));
+
+    const result = await fetchAppById("app-1");
+
+    expect(result).toEqual({ error: "Connection refused" });
   });
 });
 
@@ -300,15 +360,22 @@ describe("editApp", () => {
     const formData = new FormData();
     formData.set("name", "Updated Name");
     formData.set("description", "Updated Description");
+    formData.set("integration_mode", "webhook");
+    formData.set("webhook_url", "https://example.com/hook");
 
     await editApp("app-1", {}, formData);
 
     expect(updateApp).toHaveBeenCalledWith({
       path: { app_id: "app-1" },
       headers: { Authorization: "Bearer test-token" },
-      body: { name: "Updated Name", description: "Updated Description" },
+      body: {
+        name: "Updated Name",
+        description: "Updated Description",
+        webhook_url: "https://example.com/hook",
+        config_json: { integration: { mode: "webhook" } },
+      },
     });
-    expect(redirect).toHaveBeenCalledWith("/dashboard");
+    expect(redirect).toHaveBeenCalledWith("/dashboard/apps");
   });
 
   it("returns error when no access token", async () => {

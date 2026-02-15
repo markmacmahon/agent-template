@@ -26,13 +26,23 @@ backend/
 │   ├── users.py             # fastapi-users configuration
 │   ├── email.py             # Email sending logic
 │   ├── utils.py             # Pure utility functions
-│   └── routes/              # API route modules
-│       └── apps.py
+│   ├── routes/              # API route modules
+│   │   ├── apps.py          # CRUD for apps
+│   │   ├── threads.py       # CRUD for threads
+│   │   ├── messages.py      # CRUD for messages
+│   │   └── run.py           # POST /run (sync) + GET /run/stream (SSE)
+│   └── services/            # Domain logic (no I/O at this layer)
+│       ├── orchestrator.py  # ChatOrchestrator -- routes by integration mode
+│       ├── simulator.py     # SimulatorHandler -- canned responses
+│       └── webhook_client.py # WebhookClient -- HTTP calls + URL validation
 ├── alembic_migrations/      # Alembic migration versions
+├── docs/
+│   └── integration-modes.md # Architectural doc for integration modes
 ├── tests/                   # pytest test suite
 │   ├── conftest.py          # Shared fixtures
 │   ├── main/
 │   ├── routes/
+│   ├── services/            # Unit tests for domain services
 │   └── utils/
 ├── pyproject.toml           # Dependencies and tool config
 └── start.sh                 # Dev server startup script

@@ -31,6 +31,9 @@ class App(Base):
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
+    webhook_url = Column(String, nullable=True)
+    webhook_secret = Column(String, nullable=True)
+    config_json = Column(JSONB, nullable=False, default=dict, server_default="{}")
 
     user = relationship("User", back_populates="apps")
     threads = relationship("Thread", back_populates="app", cascade="all, delete-orphan")

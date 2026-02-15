@@ -1,10 +1,12 @@
 import uuid
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Any
 
 from fastapi_users import schemas
 from pydantic import BaseModel, Field
 from uuid import UUID
+
+IntegrationMode = Literal["simulator", "webhook"]
 
 
 class UserRead(schemas.BaseUser[uuid.UUID]):
@@ -25,19 +27,97 @@ class AppBase(BaseModel):
 
 
 class AppCreate(AppBase):
-    pass
+    webhook_url: str | None = None
+    webhook_secret: str | None = None
+    config_json: dict[str, Any] = Field(default_factory=dict)
 
 
 class AppUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
+    webhook_url: str | None = None
+    webhook_secret: str | None = None
+    config_json: dict[str, Any] | None = None
 
 
 class AppRead(AppBase):
     id: UUID
     user_id: UUID
+    webhook_url: str | None = None
+    webhook_secret: str | None = None
+    config_json: dict[str, Any] = Field(default_factory=dict)
 
     model_config = {"from_attributes": True}
+
+
+# --- Run / Orchestration schemas ---
+
+
+class RunResult(BaseModel):
+    reply_text: str | None = None
+    source: Literal["simulator", "webhook"] | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    pending: bool = False
+
+
+class RunResponse(BaseModel):
+    status: Literal["completed", "error"]
+    assistant_message: "MessageRead | None" = None
+    error: str | None = None
+
+
+# --- Canonical webhook payload (single source of truth) ---
+
+
+class WebhookMessagePayload(BaseModel):
+    """The message portion of the webhook request."""
+
+    id: str
+    seq: int
+    role: str = "user"
+    content: str
+    content_json: dict[str, Any] = Field(default_factory=dict)
+
+
+class WebhookHistoryEntry(BaseModel):
+    """A single entry in the history_tail array."""
+
+    role: str
+    content: str
+    content_json: dict[str, Any] = Field(default_factory=dict)
+
+
+class WebhookRequestPayload(BaseModel):
+    """Canonical webhook request payload v1.
+
+    This is the single source of truth for what we send to webhooks.
+    Used in: webhook calls, test endpoint, UI documentation.
+    """
+
+    version: str = "1.0"
+    event: str = "message_received"
+    app: dict[str, str]
+    thread: dict[str, str | None]
+    message: WebhookMessagePayload
+    history_tail: list[WebhookHistoryEntry] = Field(default_factory=list)
+    timestamp: str
+
+
+# --- Test webhook schemas ---
+
+
+class WebhookTestRequest(BaseModel):
+    webhook_url: str
+    sample_message: str | None = "Hello"
+
+
+class WebhookTestResponse(BaseModel):
+    ok: bool
+    status_code: int | None = None
+    latency_ms: int = 0
+    error: str | None = None
+    response_json: dict[str, Any] | None = None
+    response_text: str | None = None
 
 
 # Thread schemas

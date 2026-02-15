@@ -31,7 +31,20 @@ export const loginSchema = z.object({
   username: z.string().min(1, { message: "Username is required" }),
 });
 
+export const integrationModes = ["simulator", "webhook"] as const;
+
+export type IntegrationMode = (typeof integrationModes)[number];
+
 export const appSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
   description: z.string().min(1, { message: "Description is required" }),
+  integration_mode: z
+    .enum(integrationModes, { message: "Invalid integration mode" })
+    .default("simulator"),
+  webhook_url: z
+    .string()
+    .refine((val) => val === "" || /^https?:\/\//.test(val), {
+      message: "Webhook URL must start with http:// or https://",
+    })
+    .default(""),
 });
