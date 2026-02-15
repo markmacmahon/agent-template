@@ -292,6 +292,10 @@ The application includes a modern chat UI with real-time streaming:
 2. Click "Chat" to open the chat interface
 3. Send a message - it will stream in real-time using the simulator by default
 
+### Subscribers (conversations by customer)
+
+From the apps table or the app page, use **Subscribers** to view conversations grouped by customer. The page uses a 3-panel layout: subscribers list, threads for the selected subscriber, and the conversation. API: `GET /apps/{app_id}/subscribers`, `GET /apps/{app_id}/subscribers/{subscriber_id}/threads` (see OpenAPI at `/docs`).
+
 See `WIP.md` for latest features and changes.
 
 ## Next Steps

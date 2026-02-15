@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 /**
- * E2E: Subscribers page (3-panel inbox-style layout).
+ * E2E: Subscribers page (3-panel layout: subscribers list, threads, conversation).
  * Prerequisites: Docker DB, test user tester1@example.com / Password#99 with at least one app.
  */
 
