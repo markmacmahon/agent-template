@@ -189,4 +189,79 @@ test.describe("Chat Flow", () => {
     const assistantMessage = page.locator('[data-testid="message-assistant"]');
     await expect(assistantMessage.first()).toBeVisible({ timeout: 15000 });
   });
+
+  test("New conversation: shows placeholder at top when + clicked, no duplicate", async ({
+    page,
+  }) => {
+    await login(page);
+    await openFirstAppChat(page);
+
+    await page.waitForSelector('[data-testid="chat-container"]', {
+      timeout: 10000,
+    });
+    await expect(page.getByTestId("chat-sidebar-wrapper")).toHaveAttribute(
+      "data-state",
+      "open",
+    );
+
+    await test.step("Click New conversation (+): list shows one placeholder at top", async () => {
+      const newConvButton = page
+        .getByTestId("chat-sidebar-wrapper")
+        .getByTitle("New conversation");
+      await newConvButton.click();
+      const placeholder = page.getByTestId("thread-list-new-conversation");
+      await expect(placeholder).toBeVisible();
+      await expect(placeholder).toContainText(/new conversation/i);
+    });
+
+    await test.step("Click + again without sending: still only one placeholder", async () => {
+      const newConvButton = page
+        .getByTestId("chat-sidebar-wrapper")
+        .getByTitle("New conversation");
+      await newConvButton.click();
+      const placeholders = page.getByTestId("thread-list-new-conversation");
+      await expect(placeholders).toHaveCount(1);
+    });
+  });
+
+  test("New conversation: first message creates thread at top and placeholder is replaced", async ({
+    page,
+  }) => {
+    await login(page);
+    await openFirstAppChat(page);
+
+    await page.waitForSelector('[data-testid="chat-container"]', {
+      timeout: 10000,
+    });
+
+    await test.step("Click + to show New conversation placeholder", async () => {
+      await page
+        .getByTestId("chat-sidebar-wrapper")
+        .getByTitle("New conversation")
+        .click();
+      await expect(
+        page.getByTestId("thread-list-new-conversation"),
+      ).toBeVisible();
+    });
+
+    await test.step("Send first message: placeholder replaced by real thread at top", async () => {
+      const messageInput = page.locator('textarea[placeholder*="message"]');
+      await messageInput.fill("First message in new conversation");
+      await messageInput.press("Enter");
+    });
+
+    await test.step("Assistant reply appears and thread list shows real thread", async () => {
+      await expect(
+        page.locator('[data-testid="message-assistant"]').first(),
+      ).toBeVisible({ timeout: 15000 });
+      await expect(
+        page.getByTestId("thread-list-new-conversation"),
+      ).toHaveCount(0);
+      await expect(
+        page
+          .locator('[data-testid="chat-sidebar-wrapper"] [role="button"]')
+          .first(),
+      ).toContainText(/new conversation|first message/i);
+    });
+  });
 });

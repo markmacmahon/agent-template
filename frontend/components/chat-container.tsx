@@ -8,12 +8,14 @@ import {
   fetchMessages,
   sendMessage,
   createNewThread,
+  updateThreadTitle,
 } from "@/components/actions/chat-actions";
 import { useChatStream } from "@/hooks/use-chat-stream";
 import { usePageTitle } from "@/components/breadcrumb-context";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, PlusIcon } from "lucide-react";
 import { ThreadList } from "@/components/thread-list";
+import { EditableTitle } from "@/components/editable-title";
 import { cn } from "@/lib/utils";
 import { t } from "@/i18n/keys";
 
@@ -32,13 +34,22 @@ export function ChatContainer({
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageRead[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  /** When true, show a "New conversation" row at top of list (not persisted until first message). Only one allowed. */
+  const [hasNewConversationPlaceholder, setHasNewConversationPlaceholder] =
+    useState(false);
   const { setPageTitle, setExtraSegments } = usePageTitle();
 
   const { streamingText, status, startStream, stopStream } = useChatStream({
     appId,
     threadId: selectedThreadId || "",
-    onMessageComplete: (message) => {
-      setMessages((prev) => [...prev, message]);
+    onMessageComplete: async (message) => {
+      // Refetch from server using the thread ID from the message to avoid stale closure issues
+      const result = await fetchMessages(appId, message.thread_id, 100);
+      if ("error" in result) {
+        console.error("Failed to fetch messages after stream:", result.error);
+        return;
+      }
+      setMessages(result.data);
     },
     onError: (error) => {
       console.error("Stream error:", error);
@@ -85,7 +96,7 @@ export function ChatContainer({
     async (content: string) => {
       let threadId = selectedThreadId;
 
-      // Auto-create thread if none selected
+      // Auto-create thread if none selected (persist the "New conversation" placeholder)
       if (!threadId) {
         const customerId = `customer-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
         const threadResult = await createNewThread(
@@ -102,6 +113,7 @@ export function ChatContainer({
         threadId = threadResult.data.id;
         setThreads((prev) => [threadResult.data, ...prev]);
         setSelectedThreadId(threadId);
+        setHasNewConversationPlaceholder(false);
       }
 
       // Send user message
@@ -125,7 +137,45 @@ export function ChatContainer({
   const handleNewConversation = () => {
     setSelectedThreadId(null);
     setMessages([]);
+    if (!hasNewConversationPlaceholder) {
+      setHasNewConversationPlaceholder(true);
+    }
   };
+
+  const handleThreadTitleChange = useCallback(
+    async (threadId: string, newTitle: string) => {
+      const result = await updateThreadTitle(threadId, newTitle);
+      if ("error" in result) {
+        console.error("Failed to update thread title:", result.error);
+        return;
+      }
+      setThreads((prev) =>
+        prev.map((th) => (th.id === threadId ? result.data : th)),
+      );
+    },
+    [],
+  );
+
+  /** Persist "New conversation" by creating a thread with the given title (editing title = interaction). */
+  const handleNewConversationTitleSave = useCallback(
+    async (title: string) => {
+      if (!title.trim()) return;
+      const customerId = `customer-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      const threadResult = await createNewThread(
+        appId,
+        customerId,
+        title.trim(),
+      );
+      if ("error" in threadResult) {
+        console.error("Failed to create thread:", threadResult.error);
+        return;
+      }
+      setThreads((prev) => [threadResult.data, ...prev]);
+      setSelectedThreadId(threadResult.data.id);
+      setHasNewConversationPlaceholder(false);
+    },
+    [appId],
+  );
 
   const isStreaming = status === "streaming";
 
@@ -181,12 +231,14 @@ export function ChatContainer({
           <ThreadList
             threads={threads}
             selectedThreadId={selectedThreadId}
+            showNewConversationAtTop={hasNewConversationPlaceholder}
             onThreadSelect={(id) => {
               setSelectedThreadId(id);
               if (typeof window !== "undefined" && window.innerWidth < 768) {
                 setIsSidebarOpen(false);
               }
             }}
+            onThreadTitleChange={handleThreadTitleChange}
           />
         </aside>
       </div>
@@ -203,7 +255,10 @@ export function ChatContainer({
       {/* ── Main chat area ── */}
       <div className="flex min-w-0 flex-1 touch-pan-y flex-col bg-background">
         {/* Chat header */}
-        <header className="sticky top-0 flex items-center gap-2 bg-background px-2 py-1.5 md:px-2">
+        <header
+          data-testid="chat-header"
+          className="sticky top-0 flex items-center gap-2 bg-background px-2 py-1.5 md:px-2"
+        >
           <Button
             data-testid="chat-sidebar-toggle"
             variant="outline"
@@ -225,10 +280,26 @@ export function ChatContainer({
           </Button>
 
           {(!isSidebarOpen || typeof window !== "undefined") && (
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 flex items-center">
               {selectedThread ? (
-                <h1 className="truncate text-sm font-medium">
-                  {selectedThread.title || t("CHAT_DEFAULT_TITLE")}
+                <h1 className="min-w-0 flex-1 text-sm font-medium">
+                  <EditableTitle
+                    value={selectedThread.title ?? ""}
+                    placeholder={t("CHAT_DEFAULT_TITLE")}
+                    onSave={(newTitle) =>
+                      handleThreadTitleChange(selectedThread.id, newTitle)
+                    }
+                    className="truncate"
+                  />
+                </h1>
+              ) : hasNewConversationPlaceholder ? (
+                <h1 className="min-w-0 flex-1 text-sm font-medium text-muted-foreground">
+                  <EditableTitle
+                    value=""
+                    placeholder={t("CHAT_NEW_CONVERSATION")}
+                    onSave={handleNewConversationTitleSave}
+                    className="truncate"
+                  />
                 </h1>
               ) : (
                 <h1 className="text-sm font-medium text-muted-foreground">

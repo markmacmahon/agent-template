@@ -11,9 +11,38 @@ interface UseChatStreamOptions {
   onError?: (error: string) => void;
 }
 
-interface SSEMetaEvent {
-  source: string;
-  reason?: string;
+/**
+ * Parse SSE event stream from a ReadableStream
+ * Handles event: and data: lines
+ */
+async function* parseSSE(reader: ReadableStreamDefaultReader<Uint8Array>) {
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || ""; // Keep incomplete line in buffer
+
+    let eventType = "message";
+    let eventData = "";
+
+    for (const line of lines) {
+      if (line.startsWith("event:")) {
+        eventType = line.slice(6).trim();
+      } else if (line.startsWith("data:")) {
+        eventData = line.slice(5).trim();
+      } else if (line === "" && eventData) {
+        // Empty line indicates end of event
+        yield { type: eventType, data: eventData };
+        eventType = "message";
+        eventData = "";
+      }
+    }
+  }
 }
 
 interface SSEDeltaEvent {
@@ -38,18 +67,14 @@ export function useChatStream({
 }: UseChatStreamOptions) {
   const [streamingText, setStreamingText] = useState<string>("");
   const [status, setStatus] = useState<StreamStatus>("idle");
-  const eventSourceRef = useRef<EventSource | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const startStream = useCallback(
-    (overrideThreadId?: string) => {
+    async (overrideThreadId?: string) => {
       // Use the override if provided, otherwise fall back to the prop
       const actualThreadId = overrideThreadId || threadId;
 
       // Clean up any existing stream
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-      }
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -57,59 +82,86 @@ export function useChatStream({
       setStreamingText("");
       setStatus("streaming");
 
-      // Use Next.js API route proxy (server-side auth)
-      const url = `/api/chat/stream?appId=${appId}&threadId=${actualThreadId}`;
+      // Get token from cookie (client-side)
+      const getCookie = (name: string) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop()?.split(";").shift();
+        return undefined;
+      };
 
-      const eventSource = new EventSource(url, {
-        withCredentials: true,
-      });
+      const accessToken = getCookie("accessToken");
+      if (!accessToken) {
+        setStatus("error");
+        if (onError) onError("Unauthorized - please log in");
+        return;
+      }
 
-      eventSourceRef.current = eventSource;
+      // Call backend directly with Authorization header
+      const backendUrl =
+        process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+      const url = `${backendUrl}/apps/${appId}/threads/${actualThreadId}/run/stream`;
+
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
 
       // Track accumulated text for the done event
       let accumulatedText = "";
 
-      eventSource.addEventListener("meta", (event) => {
-        const data = JSON.parse(event.data) as SSEMetaEvent;
-        console.log("SSE meta:", data);
-      });
+      try {
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            Accept: "text/event-stream",
+          },
+          signal: abortController.signal,
+        });
 
-      eventSource.addEventListener("delta", (event) => {
-        const data = JSON.parse(event.data) as SSEDeltaEvent;
-        accumulatedText += data.text;
-        setStreamingText((prev) => prev + data.text);
-      });
-
-      eventSource.addEventListener("done", (event) => {
-        const data = JSON.parse(event.data) as SSEDoneEvent;
-
-        if (data.status === "completed" && data.message_id) {
-          // Message was persisted by backend
-          if (onMessageComplete) {
-            const completedMessage: MessageRead = {
-              id: data.message_id,
-              thread_id: actualThreadId,
-              seq: data.seq || 0,
-              role: "assistant",
-              content: accumulatedText,
-              content_json: {},
-              created_at: new Date().toISOString(),
-            };
-            onMessageComplete(completedMessage);
-          }
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        setStatus("idle");
-        setStreamingText("");
-        eventSource.close();
-      });
+        if (!response.body) {
+          throw new Error("No response body");
+        }
 
-      // Handle custom "error" events from backend
-      eventSource.addEventListener("error", (event: Event) => {
-        const messageEvent = event as MessageEvent;
-        if (messageEvent.data) {
-          try {
-            const data = JSON.parse(messageEvent.data) as SSEErrorEvent;
+        const reader = response.body.getReader();
+
+        // Parse SSE events from stream
+        for await (const event of parseSSE(reader)) {
+          if (abortController.signal.aborted) break;
+
+          if (event.type === "meta") {
+            // Meta event received, no action needed
+          } else if (event.type === "delta") {
+            const data = JSON.parse(event.data) as SSEDeltaEvent;
+            accumulatedText += data.text;
+            setStreamingText((prev) => prev + data.text);
+          } else if (event.type === "done") {
+            const data = JSON.parse(event.data) as SSEDoneEvent;
+
+            if (data.status === "completed" && data.message_id) {
+              // Message was persisted by backend
+              if (onMessageComplete) {
+                const completedMessage: MessageRead = {
+                  id: data.message_id,
+                  thread_id: actualThreadId,
+                  seq: data.seq || 0,
+                  role: "assistant",
+                  content: accumulatedText,
+                  content_json: {},
+                  created_at: new Date().toISOString(),
+                };
+                onMessageComplete(completedMessage);
+              }
+            }
+
+            setStatus("idle");
+            setStreamingText("");
+            break;
+          } else if (event.type === "error") {
+            const data = JSON.parse(event.data) as SSEErrorEvent;
             console.error("SSE error event:", data);
 
             if (onError) {
@@ -118,44 +170,32 @@ export function useChatStream({
 
             setStatus("error");
             setStreamingText("");
-            eventSource.close();
-          } catch (e) {
-            console.error("Failed to parse SSE error event:", e);
+            break;
           }
         }
-      });
+      } catch (error) {
+        if (abortController.signal.aborted) {
+          // User stopped the stream, not an error
+          setStatus("idle");
+          setStreamingText("");
+          return;
+        }
 
-      // Handle EventSource connection errors (network, auth, etc.)
-      eventSource.onerror = (event) => {
-        console.error("EventSource connection error:", {
-          readyState: eventSource.readyState,
-          url: eventSource.url,
-          event,
-        });
-
-        // Connection errors don't have data
+        console.error("Stream error:", error);
         setStatus("error");
         setStreamingText("");
-        eventSource.close();
 
         if (onError) {
-          // Check readyState to provide better error message
           const errorMsg =
-            eventSource.readyState === EventSource.CLOSED
-              ? t("ERROR_STREAM_CLOSED")
-              : t("ERROR_STREAM_FAILED");
+            error instanceof Error ? error.message : t("ERROR_STREAM_FAILED");
           onError(errorMsg);
         }
-      };
+      }
     },
     [appId, threadId, onMessageComplete, onError],
   );
 
   const stopStream = useCallback(() => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
-    }
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;

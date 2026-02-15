@@ -5,6 +5,7 @@ import { t, translateError } from "@/i18n/keys";
 import {
   listThreads,
   createThread,
+  updateThread,
   listMessages,
   createMessage,
   type ThreadRead,
@@ -74,6 +75,42 @@ export async function createNewThread(
         customer_id: customerId,
         title,
       },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (error) {
+      const detail =
+        typeof error === "object" && "detail" in error
+          ? String(error.detail)
+          : String(error);
+      return { error: translateError(detail) };
+    }
+
+    if (!data) {
+      return { error: t("ERROR_NO_DATA") };
+    }
+
+    return { data };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : t("ERROR_UNKNOWN") };
+  }
+}
+
+export async function updateThreadTitle(
+  threadId: string,
+  title: string,
+): Promise<ActionResult<ThreadRead>> {
+  const token = await getAuthToken();
+  if (!token) {
+    return { error: t("ERROR_NO_TOKEN") };
+  }
+
+  try {
+    const { data, error } = await updateThread({
+      path: { thread_id: threadId },
+      body: { title: title || null },
       headers: {
         Authorization: `Bearer ${token}`,
       },

@@ -63,10 +63,11 @@ make start-frontend
 # Run unit tests
 make test-frontend
 
-# Run E2E tests (requires backend + frontend running)
-pnpm test:e2e          # Headless
-pnpm test:e2e:headed   # See browser
-pnpm test:e2e:ui       # Interactive UI
+# Run E2E tests (backend + frontend are auto-started by Playwright; see E2E Testing below)
+make test-e2e              # From project root
+pnpm test:e2e              # Headless (from frontend)
+pnpm test:e2e:headed       # See browser
+pnpm test:e2e:ui          # Interactive UI
 
 # Before committing
 make precommit
@@ -74,9 +75,19 @@ make precommit
 
 ### E2E Testing
 
-**Prerequisites**: Test user `tester1@example.com` / `Password#99` with at least one app
+E2E tests use Playwright to test full user flows (including login, chat, SSE streaming). **The frontend and backend servers are started automatically** as part of the test run — you do not need to run `make start-backend` or `make start-frontend` first. Playwright’s `webServer` config in `playwright.config.ts` starts both; when not in CI, it will reuse already-running servers on ports 8000 and 3000 if present.
 
-E2E tests use Playwright to test full user flows including SSE streaming. Always fix bugs discovered in E2E tests immediately.
+**Prerequisites:**
+
+- **Development database:** From project root, `docker compose up -d db`. The backend started by Playwright connects to this DB.
+- **Test user:** `tester1@example.com` / `Password#99` with at least one app (required by chat-flow specs).
+
+**Run from project root:** `make test-e2e`  
+**Run from frontend:** `pnpm test:e2e` (headless), `pnpm test:e2e:headed`, `pnpm test:e2e:ui`
+
+**E2E with full server logs (debugging):** To capture backend and frontend output to files and see them on failure, use the debug script. It starts backend and frontend with logging, then runs the same Playwright command (Playwright reuses the running servers). From project root: `./frontend/run-e2e-debug.sh`. Logs: `/tmp/backend-e2e.log`, `/tmp/frontend-e2e.log`, `/tmp/test-e2e.log`.
+
+Always fix bugs discovered in E2E tests immediately.
 
 ### OpenAPI Client Auto-Regeneration
 

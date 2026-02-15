@@ -215,6 +215,8 @@ const messages = {
   CHAT_PLACEHOLDER_STREAMING: "Waiting for response...",
   CHAT_NO_CONVERSATIONS: "No conversations yet.",
   CHAT_START_BELOW: "Start chatting below.",
+  CHAT_TITLE_CLICK_TO_EDIT: "Click to edit",
+  CHAT_TITLE_PLACEHOLDER: "Conversation title",
 
   // ── Pagination ──────────────────────────────────────────────────
   PAGINATION_ITEMS_PER_PAGE: "Items per page:",

@@ -16,6 +16,7 @@ Evolve this monorepo with **TDD first**, **high craftsmanship**, and **clean mod
 4. **Prefer composition over inheritance.**
 5. **No duplication without intent.**
 6. **One idiomatic way to do things** -- if multiple approaches exist, choose the simplest consistent one.
+7. **Boyscout rule** -- always fix issues when you find them, unless explicitly told otherwise. Leave the codebase cleaner than you found it.
 
 ## TDD Workflow (Strict)
 
@@ -50,8 +51,9 @@ When implementing changes:
 2. Implement minimal passing code.
 3. Refactor for clarity and modularity.
 4. Run tests frequently during development (`make test-backend` or `make test-frontend`).
-5. Run `make precommit` only once when feature is complete and ready to commit.
-6. Summarize changes briefly (why + impact).
+5. **Apply the boyscout rule**: if you discover bugs, test failures, or issues during your work, fix them immediately unless explicitly told to skip them.
+6. Run `make precommit` only once when feature is complete and ready to commit.
+7. Summarize changes briefly (why + impact).
 
 If unclear, assume the simplest interpretation and proceed test-first.
 
@@ -97,6 +99,7 @@ make start-frontend             # Next.js on :3000
 # Testing
 make test-backend               # pytest (starts test DB automatically)
 make test-frontend              # Jest via pnpm
+make test-e2e                  # Playwright E2E (auto-starts backend + frontend; see below)
 
 # Quality
 make precommit                  # Lint + format + type check (all files)
@@ -218,3 +221,25 @@ The `WIP.md` file tracks work-in-progress changes. Keep it focused on current de
 **Database connection issues:** `docker compose down && docker volume rm agent-template_postgres_data && docker compose up -d db && make docker-migrate-db`
 
 **Dependency conflicts:** `cd backend && uv sync` or `cd frontend && pnpm install`
+
+## E2E tests (Playwright)
+
+E2E tests run full user flows in a browser. **You do not need to start the backend or frontend manually.** Playwright starts both servers as part of the test run (see `frontend/playwright.config.ts` → `webServer`). When not in CI, it will reuse already-running servers if they are on the expected ports.
+
+**Prerequisites (from project root):**
+
+1. **Development database** — `docker compose up -d db` (backend started by Playwright uses the dev DB).
+2. **Test user** — A user `tester1@example.com` / `Password#99` with at least one app (for chat-flow specs).
+
+**Run E2E:**
+
+```bash
+make test-e2e                  # From project root; headless
+cd frontend && pnpm test:e2e    # Or from frontend
+pnpm test:e2e:headed           # With browser visible
+pnpm test:e2e:ui               # Playwright UI (from frontend)
+```
+
+For debugging (full backend/frontend logs on failure): `./frontend/run-e2e-debug.sh`. Logs go to `/tmp/*-e2e.log`.
+
+More detail and test conventions: `frontend/AGENTS.md` → E2E Testing.
