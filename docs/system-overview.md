@@ -571,9 +571,11 @@ make precommit              # Lint + format + type check
 
 ### Deployment
 
-- **Frontend**: Vercel or any Node.js host. Set `NEXT_PUBLIC_API_BASE_URL` and `API_BASE_URL`.
-- **Backend**: Vercel, Railway, Render, or any Python host. Set database URL, secret keys, CORS origins.
-- **Database**: Hosted PostgreSQL (Railway, Supabase, etc.).
+**Environment variables have sensible defaults for local development.** Only production deployments require configuration:
+
+- **Frontend**: Vercel, Docker, or any Node.js host. Set `NEXT_PUBLIC_API_BASE_URL` and `API_BASE_URL`.
+- **Backend**: Vercel, Docker, or any Python host. Set database URL, secret keys, CORS origins.
+- **Database**: Hosted PostgreSQL service.
 - Backend uses `NullPool` for serverless compatibility (no persistent connections).
 
 ### API Quick Start (curl)

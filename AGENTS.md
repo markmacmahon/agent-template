@@ -235,7 +235,7 @@ Keys use `SCREAMING_SNAKE_CASE` with a category prefix:
 
 ## Deployment
 
-Both frontend and backend deploy to Vercel. Database hosted separately (e.g., Railway, Supabase).
+Both frontend and backend can deploy to Vercel, Docker, or any compatible host. Database hosted separately.
 
 ## WIP.md
 

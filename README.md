@@ -146,9 +146,9 @@ If you add workflows that deploy (e.g. to Vercel or a Python host), configure th
 
 ## Environment variables for deployment
 
-Most options have good defaults for local development. The following matter when you deploy the **Next.js app** (e.g. Vercel) or the **Python API** (e.g. Railway, Render, or any app server).
+**Most environment variables have sensible defaults and work out of the box for local development.** You only need to configure these when deploying to production.
 
-### Next.js (e.g. Vercel)
+### Next.js frontend
 
 Set these in your Next.js project (Vercel: Project → Settings → Environment Variables):
 
@@ -159,9 +159,9 @@ Set these in your Next.js project (Vercel: Project → Settings → Environment 
 
 In production, set both to your backend URL (e.g. `https://api.yourdomain.com`). For local dev, the app falls back to `http://localhost:8000` where applicable.
 
-### Python backend (e.g. Railway, Render, Docker)
+### Python backend
 
-Set these on the process that runs the FastAPI app (e.g. host env vars or Docker):
+Set these on the process that runs the FastAPI app:
 
 | Variable | Required | Description | Default (local) |
 |----------|----------|-------------|-----------------|
@@ -289,8 +289,8 @@ Access the email inbox at http://localhost:8025
 
 ## Deployment
 
-- **Frontend (Next.js):** Deploy to Vercel or any Node.js host. Set [Next.js environment variables](#nextjs-eg-vercel) (e.g. `NEXT_PUBLIC_API_BASE_URL` and `API_BASE_URL`) to your backend URL.
-- **Backend (FastAPI):** Deploy to Railway, Render, a Docker host, or any Python app server. Set [Python backend environment variables](#python-backend-eg-railway-render-docker) (database URL, secret keys, CORS, frontend URL). Database is hosted separately (e.g. Railway, Supabase).
+- **Frontend (Next.js):** Deploy to Vercel or any Node.js host. Set [Next.js environment variables](#nextjs-frontend) (e.g. `NEXT_PUBLIC_API_BASE_URL` and `API_BASE_URL`) to your backend URL.
+- **Backend (FastAPI):** Deploy using Docker, Vercel, or any Python app server. Set [Python backend environment variables](#python-backend) (database URL, secret keys, CORS, frontend URL). Database is hosted separately.
 
 ## Chat Interface
 
