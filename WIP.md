@@ -326,6 +326,320 @@ New section: **State Access Configuration**
 
 ---
 
+## Next Major Feature: Projects, Teams & Admin
+
+**Goal:** Enable team collaboration, multi-user workspaces, and platform administration for production deployments.
+
+### The Problem Today
+
+**Single-user model:**
+- Each user owns their apps independently
+- No way to share apps or collaborate with teammates
+- No team workspaces or shared resources
+- No admin capabilities for platform operators
+- No usage tracking or quotas
+
+**What's needed for production:**
+- **Team collaboration** - Multiple users working on the same apps
+- **Projects/Workspaces** - Logical grouping of apps with team access
+- **Role-based permissions** - Owner, Admin, Editor, Viewer roles
+- **Platform administration** - User management, usage analytics, system health
+- **Audit logging** - Track who did what and when
+- **Usage quotas** - Limit API calls, storage, message volume per team
+
+### Technical Implementation Scope
+
+This is a foundational feature that touches most of the system. Key areas:
+
+#### 1. Data Models & Schema
+
+**New models:**
+- `Project` - Workspace for grouping apps (id, name, description, owner_user_id, created_at)
+- `ProjectMember` - User membership in projects (project_id, user_id, role, joined_at)
+- `AuditLog` - Activity tracking (id, project_id, user_id, action, resource_type, resource_id, metadata_json, created_at)
+
+**Modified models:**
+- `App` - Add `project_id` (nullable initially for migration compatibility)
+- `User` - Add `is_admin` flag for platform admins
+
+**Roles (enum):**
+- `owner` - Full control, can delete project, manage members
+- `admin` - Can manage apps, settings, and add/remove members (except owner)
+- `editor` - Can create/edit/delete apps, view subscribers, send messages
+- `viewer` - Read-only access to apps and conversations
+
+**Indexes:**
+- `project_id` on apps for fast project app listing
+- `(project_id, user_id)` on project_members for membership checks
+- `(project_id, created_at)` on audit_log for activity feeds
+- `(user_id, created_at)` on audit_log for user activity
+
+**Migrations:**
+- Add Project and ProjectMember tables
+- Add AuditLog table
+- Add project_id to apps (nullable)
+- Add is_admin to users
+- Backfill: create default project for each existing user, assign their apps
+
+#### 2. Authorization & Permissions
+
+**New dependency:** `get_project_membership(current_user, project_id) -> ProjectMember | None`
+- Fetches user's membership in a project
+- Returns None if not a member
+- Raises 403 if user doesn't have required role
+
+**Permission checks per role:**
+
+| Action | Owner | Admin | Editor | Viewer |
+|--------|-------|-------|--------|--------|
+| View apps | ✓ | ✓ | ✓ | ✓ |
+| Create app | ✓ | ✓ | ✓ | ✗ |
+| Edit app | ✓ | ✓ | ✓ | ✗ |
+| Delete app | ✓ | ✓ | ✓ | ✗ |
+| View subscribers | ✓ | ✓ | ✓ | ✓ |
+| Send messages | ✓ | ✓ | ✓ | ✗ |
+| Add members | ✓ | ✓ | ✗ | ✗ |
+| Remove members | ✓ | ✓ | ✗ | ✗ |
+| Change roles | ✓ | ✓ (not owner) | ✗ | ✗ |
+| Edit project settings | ✓ | ✓ | ✗ | ✗ |
+| Delete project | ✓ | ✗ | ✗ | ✗ |
+
+**Partner API (X-App-Id + X-App-Secret):**
+- Currently app-scoped only
+- With projects: validate app belongs to a project with the secret
+- Add optional X-Project-Id header for multi-project partners
+
+#### 3. Projects API
+
+**CRUD endpoints:**
+- `POST /projects` - Create project (current user becomes owner)
+- `GET /projects` - List projects where user is a member
+- `GET /projects/{id}` - Get project details
+- `PATCH /projects/{id}` - Update project (requires admin/owner)
+- `DELETE /projects/{id}` - Delete project (requires owner, cascades apps)
+
+**Team management:**
+- `GET /projects/{id}/members` - List members with roles
+- `POST /projects/{id}/members` - Add member (requires admin/owner)
+- `PATCH /projects/{id}/members/{user_id}` - Update member role (requires admin/owner)
+- `DELETE /projects/{id}/members/{user_id}` - Remove member (requires admin/owner)
+- `POST /projects/{id}/invitations` - (Future) Invite by email
+
+**Activity:**
+- `GET /projects/{id}/activity` - Audit log for project (paginated)
+
+**Modified app endpoints:**
+- `GET /apps/` - Filter by project_id, or return all user's accessible apps
+- `POST /apps/` - Requires project_id in request body
+- Apps now scoped to projects (user must be project member with editor+ role)
+
+#### 4. Platform Admin API
+
+**New routes (requires `is_admin=true`):**
+
+**User management:**
+- `GET /admin/users` - List all users (search, filter, paginated)
+- `GET /admin/users/{id}` - Get user details + projects + activity
+- `PATCH /admin/users/{id}` - Update user (suspend, grant admin, etc.)
+- `DELETE /admin/users/{id}` - Delete user and cascade projects
+
+**Usage analytics:**
+- `GET /admin/usage/summary` - Platform-wide metrics (users, projects, apps, messages)
+- `GET /admin/usage/projects` - Top projects by message volume
+- `GET /admin/usage/webhooks` - Webhook call statistics
+
+**System health:**
+- `GET /admin/health` - Database connections, queue depths, error rates
+- `GET /admin/logs` - Recent errors and warnings (filterable)
+
+**Audit logs:**
+- `GET /admin/audit` - Global audit log (all projects, all users)
+
+#### 5. Audit Logging Service
+
+**New service:** `AuditService` automatically logs actions:
+
+**Actions tracked:**
+- `project.created`, `project.updated`, `project.deleted`
+- `member.added`, `member.role_changed`, `member.removed`
+- `app.created`, `app.updated`, `app.deleted`
+- `message.sent` (user messages only, not every assistant reply)
+- `admin.user_updated`, `admin.user_deleted`
+
+**Metadata examples:**
+```json
+{
+  "action": "app.created",
+  "user_id": "uuid",
+  "project_id": "uuid",
+  "resource_type": "app",
+  "resource_id": "uuid",
+  "metadata": {
+    "app_name": "Booking Agent",
+    "integration_mode": "webhook"
+  },
+  "created_at": "2024-03-15T10:30:00Z"
+}
+```
+
+**Integration points:**
+- Called from service layer (not route handlers) for cleaner testing
+- Async fire-and-forget (don't block request on audit write)
+- Retention policy (e.g., keep 90 days, archive older)
+
+#### 6. Dashboard UI
+
+**New pages:**
+
+**`/dashboard/projects`** - Project list
+- Card grid showing user's projects
+- Create new project button
+- Project stats (apps count, members count, last activity)
+
+**`/dashboard/projects/[id]`** - Project detail/hub
+- Overview: name, description, created date
+- Quick stats: apps, members, recent activity
+- Links to: Apps, Members, Activity, Settings
+
+**`/dashboard/projects/[id]/apps`** - Apps within project
+- Replaces current `/dashboard/apps` route
+- Same table/grid layout
+- Project breadcrumb
+
+**`/dashboard/projects/[id]/members`** - Team management
+- Member list with roles (Owner badge, role dropdown)
+- Add member button (search by email)
+- Remove member action (can't remove owner or self)
+- Change role action (owner can promote to admin)
+
+**`/dashboard/projects/[id]/activity`** - Audit log viewer
+- Timeline of recent actions
+- Filter by action type, user, date range
+- Export to CSV
+
+**`/dashboard/projects/[id]/settings`** - Project settings
+- Edit name, description
+- Danger zone: delete project
+
+**`/dashboard/admin`** - Platform admin panel (if `user.is_admin`)
+- User management table
+- Usage dashboard (charts, metrics)
+- System health overview
+- Global audit log
+
+**Navigation changes:**
+- Sidebar: "My Projects" instead of "Apps"
+- Projects selector dropdown in header
+- Current project context throughout dashboard
+
+#### 7. Migration Strategy
+
+**Backward compatibility:**
+1. Projects are optional at first - existing single-user workflows still work
+2. Create default project for each existing user on first login
+3. Migrate their apps to default project
+4. User sees "Personal Project" in projects list
+5. Can create additional projects for team collaboration
+
+**Gradual rollout:**
+- Phase 1: Add projects data model, default projects, keep UI unchanged
+- Phase 2: Enable projects UI behind feature flag
+- Phase 3: Make projects required for new users
+- Phase 4: Eventually deprecate project-less mode
+
+#### 8. Testing Strategy
+
+**Backend tests:**
+- `test_projects_crud.py` - Project CRUD operations
+- `test_project_members.py` - Membership management, role changes
+- `test_authorization.py` - Permission checks for each role
+- `test_admin_api.py` - Admin endpoints (requires is_admin)
+- `test_audit_logging.py` - Audit events fire correctly
+- `test_project_deletion.py` - Cascade behavior
+- `test_migration.py` - Default project creation
+
+**Frontend tests:**
+- Projects list and detail pages
+- Member management UI
+- Role permission enforcement
+- Activity log viewer
+- Admin dashboard components
+
+**E2E tests:**
+- Create project, add apps, invite member
+- Member with editor role can edit app
+- Member with viewer role cannot edit
+- Owner can delete project
+- Admin panel functionality (user management, analytics)
+
+### Implementation Phases
+
+**Phase 1: Data Layer & Basic Projects (2-3 weeks)**
+- Models, migrations (Project, ProjectMember, AuditLog)
+- Project CRUD APIs
+- Member management APIs
+- Default project creation for existing users
+- Backend tests
+
+**Phase 2: Authorization & Permissions (1-2 weeks)**
+- Role-based permission checks
+- Update app routes to require project membership
+- Partner API adjustments
+- Backend integration tests
+
+**Phase 3: Dashboard UI - Projects (2 weeks)**
+- Projects list and detail pages
+- Member management UI
+- Activity log viewer
+- Project settings
+- Frontend tests
+
+**Phase 4: Dashboard UI - Update Navigation (1 week)**
+- Migrate from apps-centric to projects-centric UI
+- Update sidebar, breadcrumbs, routing
+- Project context throughout dashboard
+
+**Phase 5: Platform Admin (2 weeks)**
+- Admin API endpoints
+- Admin dashboard UI
+- User management interface
+- Usage analytics and health monitoring
+
+**Phase 6: Audit Logging (1 week)**
+- AuditService implementation
+- Integrate into all state-changing operations
+- Retention and archival policy
+
+**Phase 7: Polish & Migration (1 week)**
+- Migration guide for existing users
+- Documentation updates
+- Feature announcement
+- Support for moving apps between projects
+
+### Open Questions
+
+1. **Default project naming:** "Personal Project", "My Workspace", or user's name?
+2. **Project limits:** Max projects per user? Max members per project?
+3. **Billing integration:** Should projects be the billing entity? Usage quotas per project?
+4. **Invitations:** Email-based invites vs. add-by-email-immediately?
+5. **App transfer:** Should we allow moving apps between projects? Permission requirements?
+6. **Audit retention:** 90 days default? Configurable per project?
+7. **Role customization:** Fixed roles only, or custom role definitions?
+8. **Multi-project apps:** Can a single app belong to multiple projects? (Likely no)
+9. **Guest users:** Invite external users without full account? (e.g., view-only clients)
+10. **Admin roles:** Should there be different levels of platform admin? (super-admin, support, etc.)
+
+### Related Features (Future)
+
+- **Usage quotas:** Enforce limits on API calls, message volume, storage per project
+- **Billing:** Integrate with Stripe for paid plans (per project or per user?)
+- **SSO/SAML:** Enterprise authentication for team workspaces
+- **Project templates:** Quick-start templates for common use cases
+- **Notification preferences:** Per-project notification settings (email, Slack)
+- **Webhooks for events:** Notify external systems of project events (new member, app created, etc.)
+
+---
+
 ## Backlog (Lower Priority)
 
 - Optional: file attachments in messages
