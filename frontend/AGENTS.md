@@ -80,7 +80,7 @@ E2E tests use Playwright to test full user flows (including login, chat, SSE str
 **Prerequisites:**
 
 - **Development database:** From project root, `docker compose up -d db`. The backend started by Playwright connects to this DB.
-- **Test user:** `tester1@example.com` / `Password#99` with at least one app (required by chat-flow specs).
+- **Test data:** `make seed` from project root creates test user `tester@nexo.xyz` / `NexoPass#99` with test app. Safe to run multiple times.
 
 **Run from project root:** `make test-e2e`  
 **Run from frontend:** `pnpm test:e2e` (headless), `pnpm test:e2e:headed`, `pnpm test:e2e:ui`

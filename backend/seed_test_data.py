@@ -2,9 +2,18 @@
 """
 Seed test data for E2E tests.
 
-Creates:
-- Test user: tester1@example.com / Password#99
-- Test app: "Test App" for the user
+Standard Test Data Pattern:
+- Domain: @nexo.xyz
+- Password: NexoPass#99 (same for all test users)
+- Pattern: {persona}@nexo.xyz
+
+Current personas:
+- tester@nexo.xyz: Primary test user for E2E tests
+
+Future personas can be added easily:
+- support@nexo.xyz: Support agent persona
+- admin@nexo.xyz: Admin persona
+- customer1@nexo.xyz, customer2@nexo.xyz: Different customer personas
 
 Idempotent - safe to run multiple times.
 """
@@ -12,87 +21,127 @@ Idempotent - safe to run multiple times.
 import asyncio
 import sys
 from pathlib import Path
+from typing import List, Dict, Any
 
 # Add backend directory to path so we can import app modules
 sys.path.insert(0, str(Path(__file__).parent))
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database import async_session_maker, engine
+from app.database import async_session_maker
 from app.models import User, App
 from app.users import UserManager
 from app.database import get_user_db
 from app.schemas import UserCreate
 
 
-TEST_USER_EMAIL = "tester1@example.com"
-TEST_USER_PASSWORD = "Password#99"
-TEST_APP_NAME = "Test App"
-TEST_APP_DESCRIPTION = "Test application for E2E tests"
+# Standard password for all test users
+STANDARD_TEST_PASSWORD = "NexoPass#99"
+
+# Test personas - easy to add more
+TEST_PERSONAS = [
+    {
+        "email": "tester@nexo.xyz",
+        "apps": [
+            {
+                "name": "Test App",
+                "description": "Primary test application for E2E tests",
+                "config_json": {
+                    "integration_mode": "simulator",
+                    "simulator_type": "echo",
+                },
+            }
+        ],
+    },
+    # Add more personas here as needed:
+    # {
+    #     "email": "support@nexo.xyz",
+    #     "apps": [
+    #         {"name": "Support App", "description": "Customer support chatbot"}
+    #     ],
+    # },
+]
 
 
-async def seed_test_data():
-    """Seed test user and app for E2E tests."""
-    print("🌱 Seeding test data...")
+async def seed_persona(session, persona: Dict[str, Any]) -> bool:
+    """Seed a single persona (user + apps)."""
+    email = persona["email"]
+    apps = persona.get("apps", [])
 
-    async with async_session_maker() as session:
-        # Check if test user already exists
-        result = await session.execute(
-            select(User).where(User.email == TEST_USER_EMAIL)
+    # Check if user already exists
+    result = await session.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+
+    if user:
+        print(f"  ✓ User already exists: {email}")
+    else:
+        # Create user using UserManager (handles password hashing)
+        user_db_dep = get_user_db(session)
+        user_db = await user_db_dep.__anext__()
+
+        user_manager = UserManager(user_db)
+
+        user_create = UserCreate(
+            email=email,
+            password=STANDARD_TEST_PASSWORD,
+            is_superuser=False,
+            is_verified=True,  # Pre-verify for testing
         )
-        user = result.scalar_one_or_none()
 
-        if user:
-            print(f"✓ Test user already exists: {TEST_USER_EMAIL}")
-        else:
-            # Create test user using UserManager (handles password hashing)
-            user_db_dep = get_user_db(session)
-            user_db = await user_db_dep.__anext__()
+        try:
+            user = await user_manager.create(user_create)
+            print(f"  ✓ Created user: {email}")
+        except Exception as e:
+            print(f"  ✗ Failed to create user {email}: {e}")
+            return False
 
-            user_manager = UserManager(user_db)
+    # Create apps for this user
+    for app_data in apps:
+        app_name = app_data["name"]
 
-            user_create = UserCreate(
-                email=TEST_USER_EMAIL,
-                password=TEST_USER_PASSWORD,
-                is_superuser=False,
-                is_verified=True,  # Pre-verify for testing
-            )
-
-            try:
-                user = await user_manager.create(user_create)
-                print(f"✓ Created test user: {TEST_USER_EMAIL}")
-            except Exception as e:
-                print(f"✗ Failed to create user: {e}")
-                return False
-
-        # Check if test app already exists
+        # Check if app already exists
         result = await session.execute(
-            select(App).where(App.user_id == user.id, App.name == TEST_APP_NAME)
+            select(App).where(App.user_id == user.id, App.name == app_name)
         )
         app = result.scalar_one_or_none()
 
         if app:
-            print(f"✓ Test app already exists: {TEST_APP_NAME}")
+            print(f"    ✓ App already exists: {app_name}")
         else:
-            # Create test app
+            # Create app
             app = App(
-                name=TEST_APP_NAME,
-                description=TEST_APP_DESCRIPTION,
+                name=app_name,
+                description=app_data.get("description", ""),
                 user_id=user.id,
-                config_json={
-                    "integration_mode": "simulator",
-                    "simulator_type": "echo",
-                },
+                config_json=app_data.get("config_json", {}),
             )
             session.add(app)
             await session.commit()
-            print(f"✓ Created test app: {TEST_APP_NAME}")
+            print(f"    ✓ Created app: {app_name}")
 
-    print("\n✅ Test data seeded successfully!")
-    print(f"   User: {TEST_USER_EMAIL} / {TEST_USER_PASSWORD}")
-    print(f"   App: {TEST_APP_NAME}")
     return True
+
+
+async def seed_test_data():
+    """Seed all test personas and their apps."""
+    print("🌱 Seeding test data...")
+    print(f"   Password for all test users: {STANDARD_TEST_PASSWORD}\n")
+
+    success = True
+    async with async_session_maker() as session:
+        for persona in TEST_PERSONAS:
+            if not await seed_persona(session, persona):
+                success = False
+
+    if success:
+        print("\n✅ Test data seeded successfully!")
+        print(f"\n📧 Test users (all use password: {STANDARD_TEST_PASSWORD}):")
+        for persona in TEST_PERSONAS:
+            print(f"   - {persona['email']}")
+    else:
+        print("\n⚠️  Some test data failed to seed")
+
+    return success
 
 
 async def main():

@@ -5,14 +5,14 @@ import { test, expect } from "@playwright/test";
  *
  * Playwright starts backend + frontend via webServer config when not in CI.
  * Prerequisites: Docker DB running (`docker compose up -d db` from project root).
- * Test user: tester1@example.com / Password#99 (must have at least one app).
+ * Test user: tester@nexo.xyz / NexoPass#99 (must have at least one app).
  */
 
 async function login(page: import("@playwright/test").Page) {
   await page.goto("/auth/login", { waitUntil: "networkidle" });
   await page.waitForSelector("form", { state: "attached" });
-  await page.locator('input[name="username"]').fill("tester1@example.com");
-  await page.locator('input[name="password"]').fill("Password#99");
+  await page.locator('input[name="username"]').fill("tester@nexo.xyz");
+  await page.locator('input[name="password"]').fill("NexoPass#99");
   await page.waitForTimeout(500);
   await page.evaluate(() => {
     const form = document.querySelector("form");

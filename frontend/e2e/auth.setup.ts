@@ -10,8 +10,8 @@ setup("authenticate", async ({ page, context }) => {
 
   await page.goto("/auth/login");
 
-  await page.locator('input[name="username"]').fill("tester1@example.com");
-  await page.locator('input[name="password"]').fill("Password#99");
+  await page.locator('input[name="username"]').fill("tester@nexo.xyz");
+  await page.locator('input[name="password"]').fill("NexoPass#99");
 
   await page.locator('button[type="submit"]').click();
 

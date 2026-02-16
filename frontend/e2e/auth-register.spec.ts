@@ -32,8 +32,8 @@ test.describe("Registration", () => {
   test("after successful registration redirects to dashboard without login page", async ({
     page,
   }) => {
-    const uniqueEmail = `e2e-${Date.now()}@example.com`;
-    const password = "Password#99";
+    const uniqueEmail = `e2e-${Date.now()}@nexo.xyz`;
+    const password = "NexoPass#99";
 
     await page.goto("/auth/register", { waitUntil: "networkidle" });
     await page.waitForSelector("form", { state: "attached" });

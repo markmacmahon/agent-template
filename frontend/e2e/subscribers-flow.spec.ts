@@ -2,14 +2,14 @@ import { test, expect } from "@playwright/test";
 
 /**
  * E2E: Subscribers page (3-panel layout: subscribers list, threads, conversation).
- * Prerequisites: Docker DB, test user tester1@example.com / Password#99 with at least one app.
+ * Prerequisites: Docker DB, test user tester@nexo.xyz / NexoPass#99 with at least one app.
  */
 
 async function login(page: import("@playwright/test").Page) {
   await page.goto("/auth/login", { waitUntil: "networkidle" });
   await page.waitForSelector("form", { state: "attached" });
-  await page.locator('input[name="username"]').fill("tester1@example.com");
-  await page.locator('input[name="password"]').fill("Password#99");
+  await page.locator('input[name="username"]').fill("tester@nexo.xyz");
+  await page.locator('input[name="password"]').fill("NexoPass#99");
   await page.waitForTimeout(500);
   await page.evaluate(() => {
     const form = document.querySelector("form");

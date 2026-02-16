@@ -106,9 +106,10 @@ make start-frontend   # Terminal 2
 ### 7. Seed Test Data (for E2E tests)
 
 ```bash
-make seed  # Creates test user (tester1@example.com) and test app
+make seed  # Creates test user (tester@nexo.xyz) and test app
 ```
 
+**Credentials:** All test users use password `NexoPass#99`
 **Note:** Skip this step if you're not running E2E tests. Safe to run multiple times (idempotent).
 
 ### 8. Run Tests (optional)
