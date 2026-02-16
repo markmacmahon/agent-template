@@ -93,7 +93,7 @@ This project supports multiple AI coding agents via the `AGENTS.md` convention:
 ## Project Structure
 
 ```
-agent-orchestrator/
+nexo/
 ├── AGENTS.md                         # AI instructions - single source of truth
 ├── CLAUDE.md                         # Pointer → AGENTS.md (for Claude Code)
 ├── .cursor/rules/project.mdc        # Pointer → AGENTS.md (for Cursor)
@@ -220,8 +220,8 @@ Keys use `SCREAMING_SNAKE_CASE` with a category prefix:
 ## Configuration Reference
 
 ### Database
-- **Development:** `agents_db` on port 5432
-- **Test:** `agents_test_db` on port 5433
+- **Development:** `nexo_db` on port 5432
+- **Test:** `nexo_test_db` on port 5433
 - All names use the `agents_` prefix
 
 ### Environment Files
@@ -245,7 +245,7 @@ The `WIP.md` file tracks work-in-progress changes. Keep it focused on current de
 
 **TypeScript errors after backend changes:** `cd frontend && rm -rf .next && pnpm run dev`
 
-**Database connection issues:** `docker compose down && docker volume rm agent-orchestrator_postgres_data && docker compose up -d db && make docker-migrate-db`
+**Database connection issues:** `docker compose down && docker volume rm nexo_postgres_data && docker compose up -d db && make docker-migrate-db`
 
 **Dependency conflicts:** `cd backend && uv sync` or `cd frontend && pnpm install`
 

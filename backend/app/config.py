@@ -13,11 +13,9 @@ class Settings(BaseSettings):
     OPENAPI_OUTPUT_FILE: str = "../local-shared-data/openapi.json"
 
     # Database - Sensible defaults for local development
-    DATABASE_URL: str = (
-        "postgresql+asyncpg://postgres:password@localhost:5432/agents_db"
-    )
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:password@localhost:5432/nexo_db"
     TEST_DATABASE_URL: str = (
-        "postgresql+asyncpg://postgres:password@localhost:5433/agents_test_db"
+        "postgresql+asyncpg://postgres:password@localhost:5433/nexo_test_db"
     )
     EXPIRE_ON_COMMIT: bool = False
 

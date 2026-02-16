@@ -165,7 +165,7 @@ Set these on the process that runs the FastAPI app (e.g. host env vars or Docker
 
 | Variable | Required | Description | Default (local) |
 |----------|----------|-------------|-----------------|
-| `DATABASE_URL` | Yes (production) | PostgreSQL connection string. | `postgresql+asyncpg://postgres:password@localhost:5432/agents_db` |
+| `DATABASE_URL` | Yes (production) | PostgreSQL connection string. | `postgresql+asyncpg://postgres:password@localhost:5432/nexo_db` |
 | `ACCESS_SECRET_KEY` | Yes (production) | JWT access token secret (min 32 chars). | Dev default; **must** override in production. |
 | `RESET_PASSWORD_SECRET_KEY` | Yes (production) | Password reset token secret. | Dev default; **must** override in production. |
 | `VERIFICATION_SECRET_KEY` | Yes (production) | Email verification token secret. | Dev default; **must** override in production. |
@@ -185,7 +185,7 @@ Optional for production: `MAIL_*` (SMTP), `OPENAPI_OUTPUT_FILE`, `OPENAPI_URL`, 
 ### Environment Setup
 
 - **Use either Docker or local setup consistently** - don't mix them for the same project session
-- The database is configured as `agents_db` for development and runs on port 5432
+- The database is configured as `nexo_db` for development and runs on port 5432
 - Frontend runs on port 3000, backend on port 8000 - these ports are configured in docker-compose.yml
 
 ### Keep Your Mac Awake During Development

@@ -328,7 +328,7 @@ A 3-panel layout for viewing conversations grouped by customer:
 ### Monorepo Structure
 
 ```
-agent-orchestrator/
+nexo/
 ├── backend/              # FastAPI app
 │   ├── app/
 │   │   ├── main.py       # App entrypoint, route registration, CORS
@@ -514,8 +514,8 @@ Backend settings are loaded from `backend/.env` via Pydantic BaseSettings:
 
 | Variable | Purpose | Default |
 |----------|---------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | `localhost:5432/agents_db` |
-| `TEST_DATABASE_URL` | Test database | `localhost:5433/agents_test_db` |
+| `DATABASE_URL` | PostgreSQL connection string | `localhost:5432/nexo_db` |
+| `TEST_DATABASE_URL` | Test database | `localhost:5433/nexo_test_db` |
 | `ACCESS_SECRET_KEY` | JWT signing secret | Dev default (must override in prod) |
 | `RESET_PASSWORD_SECRET_KEY` | Password reset token secret | Dev default |
 | `VERIFICATION_SECRET_KEY` | Email verification secret | Dev default |

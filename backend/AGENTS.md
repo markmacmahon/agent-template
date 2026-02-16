@@ -117,8 +117,8 @@ make docker-migrate-db
 make docker-db-schema migration_name="add users table"
 ```
 
-- Development DB: `agents_db` on port 5432
-- Test DB: `agents_test_db` on port 5433
+- Development DB: `nexo_db` on port 5432
+- Test DB: `nexo_test_db` on port 5433
 - Modify models in `app/models.py`, then generate a migration. Never edit migration files by hand unless necessary.
 
 ## Internationalisation (i18n) - Error Keys
