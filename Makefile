@@ -49,6 +49,10 @@ install-hooks: ## Install pre-commit hooks
 	cd $(BACKEND_DIR) && uv run pre-commit install
 
 precommit: ## Run pre-commit checks on all files (run before committing)
+	@if [ ! -d "$(FRONTEND_DIR)/node_modules" ]; then \
+		echo "Installing frontend dependencies..."; \
+		cd $(FRONTEND_DIR) && pnpm install; \
+	fi
 	cd $(BACKEND_DIR) && uv run pre-commit run --all-files
 
 
