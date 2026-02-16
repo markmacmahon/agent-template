@@ -112,6 +112,15 @@ make docker-start-frontend
 - **Backend API:** http://localhost:8000
 - **API Documentation:** http://localhost:8000/docs
 
+### 6. Webhook examples (optional)
+
+The **[examples/](examples/)** directory contains minimal webhook servers (Python stdlib, Node.js) that implement the partner webhook contract. Use them to test the platform with a real webhook or as a reference for your own integration.
+
+- **Run an example:** See [examples/README.md](examples/README.md) for step-by-step instructions (start one example, set its URL in an App, then chat).
+- **Verify they work:** From the project root run `make test-examples`. This starts each example in turn, sends a test request, and checks the response (requires Python 3 and Node.js).
+
+Ports: Python 8080, TypeScript 8081 (overridable with `PORT`). They do not conflict with the main app (3000, 8000).
+
 ## GitHub Actions (CI)
 
 The CI workflow runs backend and frontend tests with **sensible defaults**; no repository secrets are required for CI.
@@ -302,7 +311,7 @@ From the apps table or the app page, use **Subscribers** to view conversations g
 ## Documentation
 
 - **[docs/](docs/)** — Project docs. Index: [docs/README.md](docs/README.md). Main reference: [docs/system-overview.md](docs/system-overview.md).
-- **[examples/](examples/)** — Minimal webhook examples (Python stdlib, Node http). Run in separate processes; use ports 8080 / 8081 to avoid conflict with the main app (3000, 8000). See [examples/README.md](examples/README.md).
+- **[examples/](examples/)** — Webhook examples (Python stdlib, Node http). Run in separate processes; ports 8080 (Python) and 8081 (Node). See [examples/README.md](examples/README.md). Run `make test-examples` to verify they start and respond correctly.
 - **AI assistants and contributors:** [AGENTS.md](AGENTS.md) first (workflow, conventions), then docs/system-overview.md (architecture, API).
 
 ## Next Steps

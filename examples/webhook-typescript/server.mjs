@@ -6,7 +6,7 @@
 import http from "node:http";
 import crypto from "node:crypto";
 
-const PORT = 8081;
+const PORT = parseInt(process.env.PORT || "8081", 10);
 
 function verifySignature(secret, rawBody, timestamp, signature) {
   if (!secret || !timestamp || !signature) return true;

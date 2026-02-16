@@ -38,6 +38,9 @@ test-frontend: ## Run frontend tests using npm
 test-e2e: ## Run Playwright E2E tests (auto-starts backend + frontend)
 	cd $(FRONTEND_DIR) && pnpm test:e2e
 
+test-examples: ## Run webhook example smoke tests (Python + Node servers)
+	python3 examples/test_webhook_examples.py
+
 
 # Pre-commit commands
 .PHONY: install-hooks precommit

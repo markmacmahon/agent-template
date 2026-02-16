@@ -86,6 +86,7 @@ agent-template/
 ├── docs/                             # system-overview.md = architecture, API, stack
 ├── backend/                          # Python FastAPI backend (see backend/AGENTS.md)
 ├── frontend/                         # Next.js React frontend (see frontend/AGENTS.md)
+├── examples/                         # Webhook example servers (Python, Node); see examples/README.md
 └── docker-compose.yml               # Docker services configuration
 ```
 
@@ -104,6 +105,7 @@ make start-frontend             # Next.js on :3000
 make test-backend               # pytest (starts test DB automatically)
 make test-frontend              # Jest via pnpm
 make test-e2e                  # Playwright E2E (auto-starts backend + frontend; see below)
+make test-examples              # Webhook example smoke tests (Python + Node; see examples/README.md)
 
 # Quality
 make precommit                  # Lint + format + type check (all files)

@@ -11,7 +11,7 @@ import json
 import os
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-PORT = 8080
+PORT = int(os.environ.get("PORT", "8080"))
 
 
 def verify_signature(
