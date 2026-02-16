@@ -14,7 +14,7 @@ import {
 import {
   usePageTitle,
   type BreadcrumbSegment,
-} from "@/components/breadcrumb-context";
+} from "@/components/dashboard/breadcrumb-context";
 import { t } from "@/i18n/keys";
 
 interface DashboardBreadcrumbProps {

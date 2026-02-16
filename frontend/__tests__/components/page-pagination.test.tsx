@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import { screen } from "@testing-library/dom";
 import "@testing-library/jest-dom";
 
-import { PagePagination } from "@/components/page-pagination";
+import { PagePagination } from "@/components/dashboard/page-pagination";
 
 describe("PagePagination", () => {
   it("renders range info text", () => {

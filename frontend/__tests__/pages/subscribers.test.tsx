@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import SubscribersPage from "@/app/dashboard/apps/[id]/subscribers/page";
 
-jest.mock("../../components/subscribers-container", () => ({
+jest.mock("../../components/subscribers/subscribers-container", () => ({
   SubscribersContainer: ({
     appId,
     appName,

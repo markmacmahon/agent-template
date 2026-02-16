@@ -1,7 +1,7 @@
 import { passwordReset } from "@/components/actions/password-reset-action";
 import { resetForgotPassword } from "@/app/clientService";
 
-jest.mock("../../app/openapi-client/sdk.gen", () => ({
+jest.mock("../../lib/openapi-client/sdk.gen", () => ({
   resetForgotPassword: jest.fn(),
 }));
 
@@ -64,7 +64,11 @@ describe("password reset action", () => {
     expect(result).toEqual({
       server_error: "An unexpected error occurred. Please try again later.",
     });
-    expect(consoleSpy).toHaveBeenCalledWith("Password reset error:", mockError);
+    expect(consoleSpy).toHaveBeenCalledWith(
+      "[passwordResetAction]",
+      "Password reset error:",
+      mockError,
+    );
 
     consoleSpy.mockRestore();
   });

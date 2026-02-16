@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import { MessageInput } from "@/components/message-input";
+import { MessageInput } from "@/components/chat/message-input";
 
 describe("MessageInput", () => {
   it("renders textarea and send button", () => {

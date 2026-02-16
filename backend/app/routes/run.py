@@ -1,7 +1,6 @@
 """Run endpoints: sync (POST /run) and streaming (GET /run/stream)."""
 
 import json
-import logging
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -15,8 +14,9 @@ from app.schemas import MessageRead, RunResponse
 from app.services.message_service import persist_assistant_message
 from app.services.orchestrator import ChatOrchestrator
 from app.users import current_active_user
+from app.logging_config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 router = APIRouter(tags=["run"])
 

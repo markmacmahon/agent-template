@@ -14,7 +14,7 @@ export default defineConfig({
   output: {
     format: "prettier",
     lint: "eslint",
-    path: "app/openapi-client",
+    path: "lib/openapi-client",
   },
   plugins: ["@hey-api/client-fetch"],
 });

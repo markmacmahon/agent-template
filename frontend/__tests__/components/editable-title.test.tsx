@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import { EditableTitle } from "@/components/editable-title";
+import { EditableTitle } from "@/components/chat/editable-title";
 
 describe("EditableTitle", () => {
   it("shows value and enters edit mode on click", () => {

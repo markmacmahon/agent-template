@@ -4,6 +4,9 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { t } from "@/i18n/keys";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("GlobalError");
 
 export default function GlobalError({
   error,
@@ -13,7 +16,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Application error:", error);
+    logger.error("Application error:", error);
     toast.error(error.message || "Something went wrong");
   }, [error]);
 

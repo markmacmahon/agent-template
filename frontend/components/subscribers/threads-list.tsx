@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { t } from "@/i18n/keys";
 import { fetchSubscriberThreads } from "@/components/actions/subscribers-actions";
-import type { ThreadSummary } from "@/app/openapi-client";
+import type { ThreadSummary } from "@/lib/openapi-client";
 import { Button } from "@/components/ui/button";
 
 interface ThreadsListProps {

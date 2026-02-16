@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { t } from "@/i18n/keys";
-import type { MessageRead } from "@/app/openapi-client/index";
+import type { MessageRead } from "@/lib/openapi-client/index";
+import { createLogger } from "@/lib/logger";
 
 export type StreamStatus = "idle" | "streaming" | "error";
 
@@ -65,6 +66,7 @@ export function useChatStream({
   onMessageComplete,
   onError,
 }: UseChatStreamOptions) {
+  const logger = createLogger("useChatStream");
   const [streamingText, setStreamingText] = useState<string>("");
   const [status, setStatus] = useState<StreamStatus>("idle");
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -162,7 +164,7 @@ export function useChatStream({
             break;
           } else if (event.type === "error") {
             const data = JSON.parse(event.data) as SSEErrorEvent;
-            console.error("SSE error event:", data);
+            logger.error("SSE error event:", data);
 
             if (onError) {
               onError(data.message || "Stream error occurred");
@@ -181,7 +183,7 @@ export function useChatStream({
           return;
         }
 
-        console.error("Stream error:", error);
+        logger.error("Stream error:", error);
         setStatus("error");
         setStreamingText("");
 

@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import { ThreadsList } from "@/components/threads-list";
+import { ThreadsList } from "@/components/subscribers/threads-list";
 import * as subscribersActions from "../../components/actions/subscribers-actions";
 
 jest.mock("../../components/actions/subscribers-actions", () => ({

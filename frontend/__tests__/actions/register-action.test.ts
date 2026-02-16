@@ -110,7 +110,11 @@ describe("register action", () => {
       email: "testuser@example.com",
       password: "Password123#",
     });
-    expect(consoleSpy).toHaveBeenCalledWith("Registration error:", mockError);
+    expect(consoleSpy).toHaveBeenCalledWith(
+      "[registerAction]",
+      "Registration error:",
+      mockError,
+    );
 
     consoleSpy.mockRestore();
   });

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Bot, Blocks } from "lucide-react";
 
-import { DashboardBreadcrumb } from "@/components/dashboard-breadcrumb";
-import { BreadcrumbProvider } from "@/components/breadcrumb-context";
+import { DashboardBreadcrumb } from "@/components/dashboard/dashboard-breadcrumb";
+import { BreadcrumbProvider } from "@/components/dashboard/breadcrumb-context";
 import {
   DropdownMenu,
   DropdownMenuContent,

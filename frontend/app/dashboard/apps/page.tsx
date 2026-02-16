@@ -17,9 +17,9 @@ import { DeleteButton } from "./delete-button";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { MessageSquare, Users, MoreHorizontal } from "lucide-react";
-import { PageSizeSelector } from "@/components/page-size-selector";
-import { PagePagination } from "@/components/page-pagination";
-import { ErrorToast } from "@/components/error-toast";
+import { PageSizeSelector } from "@/components/dashboard/page-size-selector";
+import { PagePagination } from "@/components/dashboard/page-pagination";
+import { ErrorToast } from "@/components/dashboard/error-toast";
 import { t } from "@/i18n/keys";
 
 interface AppsPageProps {

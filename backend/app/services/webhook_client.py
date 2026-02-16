@@ -1,6 +1,5 @@
 """Webhook client for sending events to external webhook endpoints."""
 
-import logging
 from collections.abc import AsyncIterator
 from typing import Any
 from urllib.parse import urlparse
@@ -10,8 +9,9 @@ import httpx
 from app.config import settings
 from app.schemas import RunResult
 from app.i18n import t
+from app.logging_config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 # Hosts that must never be called as webhooks (unless they are the backend host, e.g. local dev)
 _BLOCKED_HOSTS = {"localhost", "127.0.0.1", "0.0.0.0"}  # noqa: S104

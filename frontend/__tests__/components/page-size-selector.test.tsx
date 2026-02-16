@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import { screen } from "@testing-library/dom";
 import "@testing-library/jest-dom";
 
-import { PageSizeSelector } from "@/components/page-size-selector";
+import { PageSizeSelector } from "@/components/dashboard/page-size-selector";
 
 const mockPush = jest.fn();
 

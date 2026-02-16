@@ -1,3 +1,3 @@
-export * from "./openapi-client";
+export * from "@/lib/openapi-client";
 
 import "@/lib/clientConfig";

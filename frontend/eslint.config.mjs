@@ -12,7 +12,7 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
-      "app/openapi-client/**",
+      "lib/openapi-client/**",
       "scripts/**",
       "playwright-report/**",
       "test-results/**",

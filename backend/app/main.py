@@ -1,5 +1,3 @@
-import logging
-
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi_pagination import add_pagination
@@ -14,10 +12,10 @@ from app.routes.subscribers import router as subscribers_router
 from app.routes.run import router as run_router
 from app.routes.webhook_test import router as webhook_test_router
 from app.config import settings
+from app.logging_config import configure_logging, get_logger
 
-logger = logging.getLogger(__name__)
-
-logging.basicConfig(level=logging.INFO)
+configure_logging()
+logger = get_logger(__name__)
 
 app = FastAPI(
     generate_unique_id_function=simple_generate_unique_route_id,

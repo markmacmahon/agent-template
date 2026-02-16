@@ -1,7 +1,6 @@
 """ChatOrchestrator -- central routing logic for integration modes."""
 
 import json
-import logging
 from collections.abc import AsyncIterator
 from datetime import datetime, timezone
 from typing import Any
@@ -16,8 +15,9 @@ from app.services.simulator import SimulatorHandler
 from app.services.webhook_signing import sign_webhook_request
 from app.config import settings
 from app.services.webhook_client import WebhookClient, WebhookError
+from app.logging_config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 HISTORY_TAIL_LIMIT = 10
 

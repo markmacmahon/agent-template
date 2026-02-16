@@ -7,6 +7,9 @@ import { redirect } from "next/navigation";
 import { loginSchema } from "@/lib/definitions";
 import { getErrorMessage } from "@/lib/utils";
 import { t } from "@/i18n/keys";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("loginAction");
 
 export async function login(prevState: unknown, formData: FormData) {
   const validatedFields = loginSchema.safeParse({
@@ -37,7 +40,7 @@ export async function login(prevState: unknown, formData: FormData) {
     }
     (await cookies()).set("accessToken", data.access_token);
   } catch (err) {
-    console.error("[LOGIN] Error:", err);
+    logger.error("[LOGIN] Error:", err);
     return {
       server_error: t("ERROR_UNEXPECTED"),
     };

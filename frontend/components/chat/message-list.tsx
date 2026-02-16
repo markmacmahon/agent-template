@@ -1,6 +1,6 @@
 "use client";
 
-import type { MessageRead } from "@/app/openapi-client/index";
+import type { MessageRead } from "@/lib/openapi-client/index";
 import { cn } from "@/lib/utils";
 import { useScroll } from "@/hooks/use-scroll";
 import { ArrowDownIcon, SparklesIcon } from "lucide-react";

@@ -2,11 +2,11 @@
 
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { usePageTitle } from "@/components/breadcrumb-context";
+import { usePageTitle } from "@/components/dashboard/breadcrumb-context";
 import { MessageSquare, Users, Pencil } from "lucide-react";
 import Link from "next/link";
 import { t } from "@/i18n/keys";
-import type { AppRead } from "@/app/openapi-client";
+import type { AppRead } from "@/lib/openapi-client";
 
 interface AppViewContentProps {
   app: AppRead;

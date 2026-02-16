@@ -97,7 +97,7 @@ Always fix bugs discovered in E2E tests immediately.
 2. Auto-generates `local-shared-data/openapi.json`
 3. Frontend watcher detects `openapi.json` change
 4. Auto-runs `pnpm run generate-client`
-5. TypeScript types in `app/openapi-client/` update automatically
+5. TypeScript types in `lib/openapi-client/` update automatically
 
 **Manual regeneration** (if watchers aren't running):
 ```bash
@@ -108,7 +108,7 @@ make start-frontend
 ```
 
 **Symptoms that indicate you need to regenerate:**
-- TypeScript errors: "Module '@/app/openapi-client' has no exported member"
+- TypeScript errors: "Module '@/lib/openapi-client' has no exported member"
 - TypeScript errors: "Cannot find module '@/app/clientService'"
 - After pulling backend changes (if you're not running `make start-frontend`)
 - After backend migrations
@@ -181,7 +181,7 @@ The API client is auto-generated from the backend's OpenAPI schema:
 cd frontend && pnpm run generate-client
 ```
 
-Run this after any backend route changes. Never manually write API types -- they come from the generated client in `app/openapi-client/`.
+Run this after any backend route changes. Never manually write API types -- they come from the generated client in `lib/openapi-client/`.
 
 ## Internationalisation (i18n)
 

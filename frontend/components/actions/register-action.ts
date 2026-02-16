@@ -8,6 +8,9 @@ import { registerRegister, authJwtLogin } from "@/app/clientService";
 import { registerSchema } from "@/lib/definitions";
 import { getErrorMessage } from "@/lib/utils";
 import { t } from "@/i18n/keys";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("registerAction");
 
 export async function register(prevState: unknown, formData: FormData) {
   const rawEmail = (formData.get("email") as string) ?? "";
@@ -44,7 +47,7 @@ export async function register(prevState: unknown, formData: FormData) {
       };
     }
   } catch (err) {
-    console.error("Registration error:", err);
+    logger.error("Registration error:", err);
     return {
       server_error: t("ERROR_UNEXPECTED"),
       email: rawEmail,

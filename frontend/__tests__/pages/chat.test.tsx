@@ -3,7 +3,7 @@ import "@testing-library/jest-dom";
 import ChatPage from "@/app/dashboard/apps/[id]/chat/page";
 
 // Mock the ChatContainer component
-jest.mock("../../components/chat-container", () => ({
+jest.mock("../../components/chat/chat-container", () => ({
   ChatContainer: ({ appId }: { appId: string }) => (
     <div data-testid="chat-container">Chat for app {appId}</div>
   ),

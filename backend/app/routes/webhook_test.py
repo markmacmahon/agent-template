@@ -1,7 +1,6 @@
 """Test webhook endpoint for validating webhook configuration."""
 
 import json
-import logging
 import time
 from datetime import datetime, timezone
 from uuid import UUID
@@ -23,8 +22,9 @@ from app.config import settings
 from app.services.webhook_client import validate_webhook_url
 from app.services.webhook_signing import sign_webhook_request
 from app.users import current_active_user
+from app.logging_config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 router = APIRouter(tags=["webhook"])
 

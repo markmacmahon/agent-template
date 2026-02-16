@@ -2,10 +2,10 @@ import {
   fetchSubscribers,
   fetchSubscriberThreads,
 } from "@/components/actions/subscribers-actions";
-import { listSubscribers, listSubscriberThreads } from "@/app/openapi-client";
+import { listSubscribers, listSubscriberThreads } from "@/lib/openapi-client";
 import { cookies } from "next/headers";
 
-jest.mock("../../app/openapi-client", () => ({
+jest.mock("../../lib/openapi-client", () => ({
   listSubscribers: jest.fn(),
   listSubscriberThreads: jest.fn(),
 }));

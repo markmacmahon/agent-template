@@ -1,6 +1,6 @@
 import { fetchAppById } from "@/components/actions/apps-action";
 import { EditAppForm } from "./edit-app-form";
-import { ErrorToast } from "@/components/error-toast";
+import { ErrorToast } from "@/components/dashboard/error-toast";
 import Link from "next/link";
 
 interface EditAppPageProps {

@@ -61,7 +61,7 @@ make start-frontend  # Kills :3000 first
 2. **Frontend watcher** (`frontend/watcher.js`):
    - Watches `local-shared-data/openapi.json`
    - On change → runs `pnpm run generate-client`
-   - Generates `app/openapi-client/` TypeScript types
+   - Generates `lib/openapi-client/` TypeScript types
 
 If watchers aren't running, manually regenerate:
 ```bash
@@ -123,7 +123,7 @@ frontend/watcher.js detects openapi.json change
     ↓
 Runs: pnpm run generate-client
     ↓
-Generates: app/openapi-client/*.ts
+Generates: lib/openapi-client/*.ts
     ↓
 Frontend has updated types automatically!
 ```

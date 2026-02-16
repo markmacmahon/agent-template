@@ -230,7 +230,7 @@ To ensure a clean development environment:
 1. Backend watcher detects changes to routes/schemas
 2. Auto-generates `local-shared-data/openapi.json`
 3. Frontend watcher detects JSON change
-4. Auto-regenerates TypeScript types in `app/openapi-client/`
+4. Auto-regenerates TypeScript types in `lib/openapi-client/`
 
 Manual regeneration (if needed): `cd frontend && pnpm run generate-client`
 

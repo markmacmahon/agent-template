@@ -9,9 +9,9 @@ import {
   forwardRef,
   useRef,
 } from "react";
-import { MessageList } from "@/components/message-list";
-import { MessageInput } from "@/components/message-input";
-import type { MessageRead } from "@/app/openapi-client/index";
+import { MessageList } from "@/components/chat/message-list";
+import { MessageInput } from "@/components/chat/message-input";
+import type { MessageRead } from "@/lib/openapi-client/index";
 import {
   fetchMessages,
   createAssistantMessage,
@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { t } from "@/i18n/keys";
 import type { ScenarioStep } from "@/lib/scenarios";
+import { createLogger } from "@/lib/logger";
 
 interface ThreadChatProps {
   appId: string;
@@ -38,6 +39,8 @@ type PendingMessage = {
   status: "pending" | "error";
   error?: string;
 };
+
+const logger = createLogger("ThreadChat");
 
 export const ThreadChat = forwardRef<ThreadChatHandle, ThreadChatProps>(
   function ThreadChat({ appId, threadId }: ThreadChatProps, ref) {
@@ -65,7 +68,7 @@ export const ThreadChat = forwardRef<ThreadChatHandle, ThreadChatProps>(
         setPendingMessages([]);
         const result = await fetchMessages(appId, threadId, 100);
         if ("error" in result) {
-          console.error("Failed to fetch messages:", result.error);
+          logger.error("Failed to fetch messages:", result.error);
           setLoadError(result.error);
           setMessages([]);
           setLoading(false);
@@ -98,7 +101,7 @@ export const ThreadChat = forwardRef<ThreadChatHandle, ThreadChatProps>(
         setSending(false);
 
         if ("error" in result) {
-          console.error("Failed to send message:", result.error);
+          logger.error("Failed to send message:", result.error);
           setPendingMessages((prev) =>
             prev.map((msg) =>
               msg.tempId === tempId
@@ -208,7 +211,7 @@ export const ThreadChat = forwardRef<ThreadChatHandle, ThreadChatProps>(
           }
 
           if ("error" in result) {
-            console.error("Scenario send failed:", result.error);
+            logger.error("Scenario send failed:", result.error);
             setPendingMessages((prev) =>
               prev.map((msg) =>
                 msg.tempId === pendingId

@@ -5,6 +5,9 @@ import { redirect } from "next/navigation";
 import { passwordResetConfirmSchema } from "@/lib/definitions";
 import { getErrorMessage } from "@/lib/utils";
 import { t } from "@/i18n/keys";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("passwordResetAction");
 
 export async function passwordReset(prevState: unknown, formData: FormData) {
   const input = {
@@ -20,7 +23,7 @@ export async function passwordReset(prevState: unknown, formData: FormData) {
     }
     return { message: t("AUTH_PASSWORD_RESET_SUCCESS") };
   } catch (err) {
-    console.error("Password reset error:", err);
+    logger.error("Password reset error:", err);
     return {
       server_error: t("ERROR_UNEXPECTED"),
     };
@@ -57,7 +60,7 @@ export async function passwordResetConfirm(
     }
     redirect(`/auth/login`);
   } catch (err) {
-    console.error("Password reset confirmation error:", err);
+    logger.error("Password reset confirmation error:", err);
     return {
       server_error: t("ERROR_UNEXPECTED"),
     };

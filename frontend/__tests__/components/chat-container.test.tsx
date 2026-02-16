@@ -6,7 +6,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import { ChatContainer } from "@/components/chat-container";
+import { ChatContainer } from "@/components/chat/chat-container";
 import * as chatActions from "../../components/actions/chat-actions";
 
 // jsdom does not provide ResizeObserver (used by MessageList/useScroll)
@@ -44,7 +44,7 @@ jest.mock("../../hooks/use-chat-stream", () => ({
   }),
 }));
 
-jest.mock("../../components/breadcrumb-context", () => ({
+jest.mock("../../components/dashboard/breadcrumb-context", () => ({
   usePageTitle: () => ({
     setPageTitle: jest.fn(),
     setExtraSegments: jest.fn(),

@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import { MessageList } from "@/components/message-list";
+import { MessageList } from "@/components/chat/message-list";
 
 // jsdom doesn't provide ResizeObserver, MutationObserver.observe, or scrollTo
 global.ResizeObserver = class {

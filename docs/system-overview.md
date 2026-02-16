@@ -271,7 +271,7 @@ End-to-end types are maintained automatically:
 
 1. Python types defined with Pydantic models.
 2. FastAPI auto-generates OpenAPI spec -> `local-shared-data/openapi.json`.
-3. `@hey-api/openapi-ts` generates TypeScript types in `frontend/app/openapi-client/`.
+3. `@hey-api/openapi-ts` generates TypeScript types in `frontend/lib/openapi-client/`.
 4. Frontend uses the typed API client for all backend calls.
 
 File watchers (`backend/watcher.py`, `frontend/watcher.js`) auto-regenerate on changes when using `make start-backend` / `make start-frontend`.

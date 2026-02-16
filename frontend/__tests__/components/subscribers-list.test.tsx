@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import { SubscribersList } from "@/components/subscribers-list";
+import { SubscribersList } from "@/components/subscribers/subscribers-list";
 import * as subscribersActions from "../../components/actions/subscribers-actions";
 
 jest.mock("../../components/actions/subscribers-actions", () => ({

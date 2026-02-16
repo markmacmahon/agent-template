@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { t } from "@/i18n/keys";
 import { fetchSubscribers } from "@/components/actions/subscribers-actions";
-import type { SubscriberSummary } from "@/app/openapi-client";
+import type { SubscriberSummary } from "@/lib/openapi-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";

@@ -1,9 +1,14 @@
 import json
 from pathlib import Path
+
 from app.main import app
 from app.config import settings
+from app.logging_config import configure_logging, get_logger
 
 OUTPUT_FILE = settings.OPENAPI_OUTPUT_FILE
+
+configure_logging()
+logger = get_logger(__name__)
 
 
 def generate_openapi_schema(output_file):
@@ -13,7 +18,7 @@ def generate_openapi_schema(output_file):
     updated_schema = remove_operation_id_tag(schema)
 
     output_path.write_text(json.dumps(updated_schema, indent=2))
-    print(f"OpenAPI schema saved to {output_file}")
+    logger.info("OpenAPI schema saved to %s", output_file)
 
 
 def remove_operation_id_tag(schema):

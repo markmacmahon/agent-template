@@ -7,7 +7,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import { SubscribersContainer } from "@/components/subscribers-container";
+import { SubscribersContainer } from "@/components/subscribers/subscribers-container";
 
 const mockReplace = jest.fn();
 jest.mock("next/navigation", () => ({
@@ -15,7 +15,7 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-jest.mock("../../components/breadcrumb-context", () => ({
+jest.mock("../../components/dashboard/breadcrumb-context", () => ({
   usePageTitle: () => ({
     setPageTitle: jest.fn(),
     setExtraSegments: jest.fn(),
@@ -50,7 +50,7 @@ jest.mock("../../components/actions/chat-actions", () => ({
 const mockStreamScenario = jest.fn().mockResolvedValue(undefined);
 const mockRefreshMessages = jest.fn();
 
-jest.mock("../../components/thread-chat", () => ({
+jest.mock("../../components/chat/thread-chat", () => ({
   ThreadChat: React.forwardRef(
     (
       { threadId }: { threadId: string },

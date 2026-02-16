@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { toast } from "sonner";
 
-import { ErrorToast } from "@/components/error-toast";
+import { ErrorToast } from "@/components/dashboard/error-toast";
 
 jest.mock("sonner", () => ({
   toast: { error: jest.fn() },

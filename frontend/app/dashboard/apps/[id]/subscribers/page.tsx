@@ -1,4 +1,4 @@
-import { SubscribersContainer } from "@/components/subscribers-container";
+import { SubscribersContainer } from "@/components/subscribers/subscribers-container";
 import { fetchAppById } from "@/components/actions/apps-action";
 
 export default async function SubscribersPage({

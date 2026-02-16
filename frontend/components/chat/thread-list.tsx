@@ -1,10 +1,10 @@
 "use client";
 
-import type { ThreadRead } from "@/app/openapi-client/index";
+import type { ThreadRead } from "@/lib/openapi-client/index";
 import { cn } from "@/lib/utils";
 import { MessageSquareIcon } from "lucide-react";
 import { t } from "@/i18n/keys";
-import { EditableTitle } from "@/components/editable-title";
+import { EditableTitle } from "@/components/chat/editable-title";
 
 interface ThreadListProps {
   threads: ThreadRead[];

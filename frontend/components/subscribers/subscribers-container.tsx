@@ -3,10 +3,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { t } from "@/i18n/keys";
-import { SubscribersList } from "@/components/subscribers-list";
-import { ThreadsList } from "@/components/threads-list";
-import { ThreadChat, type ThreadChatHandle } from "@/components/thread-chat";
-import { usePageTitle } from "@/components/breadcrumb-context";
+import { SubscribersList } from "@/components/subscribers/subscribers-list";
+import { ThreadsList } from "@/components/subscribers/threads-list";
+import {
+  ThreadChat,
+  type ThreadChatHandle,
+} from "@/components/chat/thread-chat";
+import { usePageTitle } from "@/components/dashboard/breadcrumb-context";
 import { sendMessage } from "@/components/actions/chat-actions";
 import {
   Select,
@@ -15,6 +18,7 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { SCENARIO_PRESETS } from "@/lib/scenarios";
+import { createLogger } from "@/lib/logger";
 
 interface SubscribersContainerProps {
   appId: string;
@@ -29,6 +33,7 @@ export function SubscribersContainer({
   initialSubscriberId,
   initialThreadId,
 }: SubscribersContainerProps) {
+  const logger = createLogger("SubscribersContainer");
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setPageTitle, setExtraSegments } = usePageTitle();
@@ -107,7 +112,7 @@ export function SubscribersContainer({
             step.content,
           );
           if ("error" in result) {
-            console.error("Scenario failed to add user message:", result.error);
+            logger.error("Scenario failed to add user message:", result.error);
             break;
           }
           threadChatRef.current?.refreshMessages?.();

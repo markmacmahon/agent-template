@@ -6,7 +6,7 @@ jest.mock("next/navigation", () => ({
   redirect: jest.fn(),
 }));
 
-jest.mock("../../app/openapi-client/sdk.gen", () => ({
+jest.mock("../../lib/openapi-client/sdk.gen", () => ({
   resetResetPassword: jest.fn(),
 }));
 
@@ -91,6 +91,7 @@ describe("password reset confirm action", () => {
       server_error: "An unexpected error occurred. Please try again later.",
     });
     expect(consoleSpy).toHaveBeenCalledWith(
+      "[passwordResetAction]",
       "Password reset confirmation error:",
       mockError,
     );

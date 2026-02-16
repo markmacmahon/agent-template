@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import { screen } from "@testing-library/dom";
 import "@testing-library/jest-dom";
 
-import { DashboardBreadcrumb } from "@/components/dashboard-breadcrumb";
+import { DashboardBreadcrumb } from "@/components/dashboard/dashboard-breadcrumb";
 
 const mockPathname = jest.fn();
 jest.mock("next/navigation", () => ({
@@ -11,7 +11,7 @@ jest.mock("next/navigation", () => ({
 
 const mockPageTitle = jest.fn();
 const mockExtraSegments = jest.fn();
-jest.mock("../../components/breadcrumb-context", () => ({
+jest.mock("../../components/dashboard/breadcrumb-context", () => ({
   usePageTitle: () => ({
     pageTitle: mockPageTitle(),
     setPageTitle: jest.fn(),

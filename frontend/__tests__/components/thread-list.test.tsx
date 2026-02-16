@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import { ThreadList } from "@/components/thread-list";
+import { ThreadList } from "@/components/chat/thread-list";
 
 describe("ThreadList", () => {
   const mockThreads = [

@@ -1,10 +1,13 @@
-import { ChatContainer } from "@/components/chat-container";
+import { ChatContainer } from "@/components/chat/chat-container";
 import {
   fetchThreads,
   fetchCurrentUserId,
 } from "@/components/actions/chat-actions";
 import { fetchAppById } from "@/components/actions/apps-action";
-import type { ThreadRead } from "@/app/openapi-client/index";
+import type { ThreadRead } from "@/lib/openapi-client/index";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("ChatPage");
 
 export default async function ChatPage({
   params,
@@ -27,7 +30,7 @@ export default async function ChatPage({
   if ("data" in threadsResult) {
     initialThreads = threadsResult.data.items ?? [];
   } else {
-    console.error("Failed to fetch threads:", threadsResult.error);
+    logger.error("Failed to fetch threads:", threadsResult.error);
   }
 
   return (

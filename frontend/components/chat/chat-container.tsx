@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { MessageList } from "@/components/message-list";
-import { MessageInput } from "@/components/message-input";
-import type { ThreadRead, MessageRead } from "@/app/openapi-client/index";
+import { MessageList } from "@/components/chat/message-list";
+import { MessageInput } from "@/components/chat/message-input";
+import type { ThreadRead, MessageRead } from "@/lib/openapi-client/index";
 import {
   fetchMessages,
   sendMessage,
@@ -11,13 +11,14 @@ import {
   updateThreadTitle,
 } from "@/components/actions/chat-actions";
 import { useChatStream } from "@/hooks/use-chat-stream";
-import { usePageTitle } from "@/components/breadcrumb-context";
+import { usePageTitle } from "@/components/dashboard/breadcrumb-context";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, PlusIcon } from "lucide-react";
-import { ThreadList } from "@/components/thread-list";
-import { EditableTitle } from "@/components/editable-title";
+import { ThreadList } from "@/components/chat/thread-list";
+import { EditableTitle } from "@/components/chat/editable-title";
 import { cn } from "@/lib/utils";
 import { t } from "@/i18n/keys";
+import { createLogger } from "@/lib/logger";
 
 interface ChatContainerProps {
   appId: string;
@@ -32,6 +33,7 @@ export function ChatContainer({
   userId,
   initialThreads = [],
 }: ChatContainerProps) {
+  const logger = createLogger("ChatContainer");
   const [threads, setThreads] = useState<ThreadRead[]>(initialThreads);
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageRead[]>([]);
@@ -46,13 +48,13 @@ export function ChatContainer({
       // Refetch from server using the thread ID from the message to avoid stale closure issues
       const result = await fetchMessages(appId, message.thread_id, 100);
       if ("error" in result) {
-        console.error("Failed to fetch messages after stream:", result.error);
+        logger.error("Failed to fetch messages after stream:", result.error);
         return;
       }
       setMessages(result.data);
     },
     onError: (error) => {
-      console.error("Stream error:", error);
+      logger.error("Stream error:", error);
     },
   });
 
@@ -86,7 +88,7 @@ export function ChatContainer({
 
       const result = await fetchMessages(appId, selectedThreadId, 100);
       if ("error" in result) {
-        console.error("Failed to fetch messages:", result.error);
+        logger.error("Failed to fetch messages:", result.error);
         setMessagesLoading(false);
         return;
       }
@@ -114,7 +116,7 @@ export function ChatContainer({
         );
 
         if ("error" in threadResult) {
-          console.error("Failed to create thread:", threadResult.error);
+          logger.error("Failed to create thread:", threadResult.error);
           return;
         }
 
@@ -129,7 +131,7 @@ export function ChatContainer({
       const messageResult = await sendMessage(appId, threadId, content);
 
       if ("error" in messageResult) {
-        console.error("Failed to send message:", messageResult.error);
+        logger.error("Failed to send message:", messageResult.error);
         return;
       }
 
@@ -150,7 +152,7 @@ export function ChatContainer({
       `customer-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     const threadResult = await createNewThread(appId, customerId, "");
     if ("error" in threadResult) {
-      console.error("Failed to create thread:", threadResult.error);
+      logger.error("Failed to create thread:", threadResult.error);
       return;
     }
     const { thread, initial_message } = threadResult.data;
@@ -166,7 +168,7 @@ export function ChatContainer({
     async (threadId: string, newTitle: string) => {
       const result = await updateThreadTitle(threadId, newTitle);
       if ("error" in result) {
-        console.error("Failed to update thread title:", result.error);
+        logger.error("Failed to update thread title:", result.error);
         return;
       }
       setThreads((prev) =>
