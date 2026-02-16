@@ -20,7 +20,6 @@ const messages = {
   HOME_SUBTITLE:
     "Build conversational agents that integrate seamlessly with existing chatbot ecosystems. Create modular integrations that handle specialized tasks from simple Q&A to complex transactional workflows.",
   HOME_CTA: "Go to Dashboard",
-  HOME_GITHUB: "View on GitHub",
 
   // ── Auth: login ─────────────────────────────────────────────────
   AUTH_LOGIN_TITLE: "Login",

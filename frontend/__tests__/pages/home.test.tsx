@@ -21,17 +21,6 @@ describe("Home Page", () => {
     expect(dashboardLink).toHaveAttribute("href", "/dashboard");
   });
 
-  it("renders a link to GitHub", () => {
-    render(<Home />);
-
-    const githubLink = screen.getByRole("link", { name: /view on github/i });
-    expect(githubLink).toBeInTheDocument();
-    expect(githubLink).toHaveAttribute(
-      "href",
-      "https://github.com/luzia/agent-orchestrator",
-    );
-  });
-
   it("renders the description text", () => {
     render(<Home />);
 

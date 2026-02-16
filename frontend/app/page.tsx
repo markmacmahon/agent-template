@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Bot, Github } from "lucide-react";
+import { Bot } from "lucide-react";
 import { t } from "@/i18n/keys";
 
 export default function Home() {
@@ -26,23 +25,6 @@ export default function Home() {
             {t("HOME_CTA")}
           </Button>
         </Link>
-
-        {/* GitHub Badge */}
-        <div className="mt-6">
-          <Badge
-            variant="outline"
-            className="text-sm flex items-center gap-2 px-3 py-2 rounded-lg"
-          >
-            <Github className="w-5 h-5" />
-            <Link
-              href="https://github.com/luzia/agent-orchestrator"
-              target="_blank"
-              className="hover:underline"
-            >
-              {t("HOME_GITHUB")}
-            </Link>
-          </Badge>
-        </div>
       </div>
     </main>
   );

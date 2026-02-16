@@ -2,7 +2,7 @@
 name = "app"
 version = "0.0.6"
 description = ""
-authors = [{ name = "Anderson Resende", email = "anderson@vinta.com.br" }]
+authors = [{ name = "Mark MacMahon", email = "mmm@luzia.com" }]
 requires-python = ">=3.12,<3.13"
 readme = "README.md"
 dependencies = [
