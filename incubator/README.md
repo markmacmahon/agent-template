@@ -66,6 +66,13 @@ incubator/
 - For skills: folder name = skill command name (e.g., `skills/analyze-logs/` → `/analyze-logs`)
 - Include date in one-off scripts: `2026-02-export-legacy-data.py`
 
+### Writing Conventions
+Follow the project's writing style (see root `AGENTS.md` for details):
+- **No em dashes** - Use hyphens (-) instead of em dashes (—) in all documentation and code comments
+- **Clear, concise language** - Avoid jargon, explain acronyms on first use
+- **Active voice** - "The script processes data" not "Data is processed by the script"
+- **Code examples** - Show don't tell - include working examples when possible
+
 ## Documentation Template
 
 Every script should start with a docstring or have a README:

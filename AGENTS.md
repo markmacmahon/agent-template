@@ -73,7 +73,7 @@ Em dashes create inconsistency and can cause encoding issues. Use:
 **Wrong:** `User preferences — stored centrally`
 **Right:** `User preferences - stored centrally`
 
-**Cleanup tool:** If em dashes slip in, use the `/remove-em-dashes` skill (requires Claude Code restart after skill creation). This skill scans the codebase and replaces all em dashes with hyphens.
+**Cleanup tool:** If em dashes slip in, use the `/remove-em-dashes` skill to scan the codebase and replace them with hyphens.
 
 ## AI Agent Configuration
 
