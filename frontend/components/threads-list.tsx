@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { t } from "@/i18n/keys";
 import { fetchSubscriberThreads } from "@/components/actions/subscribers-actions";
 import type { ThreadSummary } from "@/app/openapi-client";
@@ -22,29 +22,28 @@ export function ThreadsList({
   const [threads, setThreads] = useState<ThreadSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // Fetch threads when subscriber changes
   useEffect(() => {
     setThreads([]);
-    setPage(1);
     setLoading(true);
     setError(null);
+    setNextCursor(null);
   }, [subscriberId]);
 
   // Fetch threads
   useEffect(() => {
-    const loadThreads = async () => {
+    let cancelled = false;
+    async function loadThreads() {
       setLoading(true);
       setError(null);
 
-      const result = await fetchSubscriberThreads(
-        appId,
-        subscriberId,
-        page,
-        50,
-      );
+      const result = await fetchSubscriberThreads(appId, subscriberId);
+
+      if (cancelled) return;
 
       if ("error" in result) {
         setError(result.error);
@@ -52,21 +51,39 @@ export function ThreadsList({
         return;
       }
 
-      if (page === 1) {
-        setThreads(result.data.items);
-      } else {
-        setThreads((prev) => [...prev, ...result.data.items]);
-      }
-
-      setHasMore((result.data.page ?? 0) < (result.data.pages ?? 0));
+      setThreads(result.data.items);
+      setNextCursor(result.data.next_cursor ?? null);
+      setHasMore(Boolean(result.data.next_cursor));
       setLoading(false);
-    };
+    }
 
     loadThreads();
-  }, [appId, subscriberId, page]);
+    return () => {
+      cancelled = true;
+    };
+  }, [appId, subscriberId]);
 
-  const handleLoadMore = () => {
-    setPage((p) => p + 1);
+  const handleLoadMore = async () => {
+    if (!nextCursor || loadingMore) {
+      return;
+    }
+    setLoadingMore(true);
+    const result = await fetchSubscriberThreads(
+      appId,
+      subscriberId,
+      nextCursor,
+    );
+
+    if ("error" in result) {
+      setError(result.error);
+      setLoadingMore(false);
+      return;
+    }
+
+    setThreads((prev) => [...prev, ...result.data.items]);
+    setNextCursor(result.data.next_cursor ?? null);
+    setHasMore(Boolean(result.data.next_cursor));
+    setLoadingMore(false);
   };
 
   const formatTimestamp = (timestamp: string | null) => {
@@ -85,14 +102,43 @@ export function ThreadsList({
     return date.toLocaleDateString();
   };
 
-  if (error) {
-    return <div className="p-4 text-center text-red-500 text-sm">{error}</div>;
-  }
+  const messageCountLabel = useMemo(() => {
+    return (count: number) =>
+      count === 1
+        ? t("SUBSCRIBERS_MESSAGE_COUNT_ONE")
+        : t("SUBSCRIBERS_MESSAGE_COUNT_OTHER").replace(
+            "{count}",
+            String(count),
+          );
+  }, []);
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto">
-        {threads.length === 0 && !loading ? (
+        {error && (
+          <div
+            className="p-4 text-center text-sm text-red-500"
+            data-testid="threads-error"
+          >
+            {error}
+          </div>
+        )}
+
+        {loading && !error && (
+          <div className="p-4 space-y-3" data-testid="threads-loading">
+            {[0, 1].map((index) => (
+              <div
+                key={index}
+                className="animate-pulse rounded-lg border border-dashed border-muted-foreground/30 p-4"
+              >
+                <div className="h-4 w-2/3 rounded bg-muted mb-2" />
+                <div className="h-3 w-1/3 rounded bg-muted" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {threads.length === 0 && !loading && !error ? (
           <div className="p-8 text-center">
             <p className="text-sm font-medium text-muted-foreground">
               {t("SUBSCRIBERS_NO_THREADS")}
@@ -107,6 +153,7 @@ export function ThreadsList({
                 className={`w-full text-left p-4 border-b hover:bg-accent transition-colors ${
                   selectedThreadId === thread.id ? "bg-accent" : ""
                 }`}
+                data-testid={`subscriber-thread-${thread.id}`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
@@ -125,18 +172,11 @@ export function ThreadsList({
                 </div>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-xs text-muted-foreground">
-                    {thread.message_count}{" "}
-                    {thread.message_count === 1 ? "message" : "messages"}
+                    {messageCountLabel(thread.message_count ?? 0)}
                   </span>
                 </div>
               </button>
             ))}
-
-            {loading && (
-              <div className="p-4 text-center text-sm text-muted-foreground">
-                {t("SUBSCRIBERS_LOADING")}
-              </div>
-            )}
 
             {hasMore && !loading && (
               <div className="p-3">
@@ -145,8 +185,12 @@ export function ThreadsList({
                   size="sm"
                   onClick={handleLoadMore}
                   className="w-full"
+                  disabled={loadingMore}
+                  data-testid="threads-load-more"
                 >
-                  {t("SUBSCRIBERS_LOAD_MORE")}
+                  {loadingMore
+                    ? t("SUBSCRIBERS_LOADING_MORE")
+                    : t("SUBSCRIBERS_LOAD_MORE")}
                 </Button>
               </div>
             )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -17,8 +18,25 @@ import Link from "next/link";
 import { FieldError, FormError } from "@/components/ui/FormError";
 import { t } from "@/i18n/keys";
 
+type RegisterState = {
+  email?: string;
+  password?: string;
+  errors?: { [key: string]: string | string[] };
+  server_validation_error?: string;
+  server_error?: string;
+};
+
 export default function Page() {
   const [state, dispatch] = useActionState(register, undefined);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  useEffect(() => {
+    const s = state as RegisterState | undefined;
+    if (s?.email !== undefined) setEmail(s.email);
+    if (s?.password !== undefined) setPassword(s.password);
+  }, [state]);
+
   return (
     <div className="flex h-screen w-full items-center justify-center bg-muted px-4">
       <form action={dispatch}>
@@ -37,13 +55,22 @@ export default function Page() {
                 name="email"
                 type="email"
                 placeholder={t("FORM_PLACEHOLDER_EMAIL")}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
               <FieldError state={state} field="email" />
             </div>
             <div className="grid gap-3">
               <Label htmlFor="password">{t("FORM_PASSWORD")}</Label>
-              <Input id="password" name="password" type="password" required />
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
               <FieldError state={state} field="password" />
             </div>
             <SubmitButton text={t("AUTH_REGISTER_SUBMIT")} />

@@ -51,12 +51,13 @@ describe("Edit App Page", () => {
     expect(descInput.value).toBe("Test Description");
   });
 
-  it("renders the submit button with update text", async () => {
+  it("renders the submit button (Save app & credentials when webhook, else Update App)", async () => {
     const page = await EditAppPage({ params: defaultParams });
     render(page);
 
+    // Mock app has webhook mode, so button is "Save app & credentials"
     expect(
-      screen.getByRole("button", { name: /update app/i }),
+      screen.getByRole("button", { name: /save app & credentials/i }),
     ).toBeInTheDocument();
   });
 
@@ -109,7 +110,7 @@ describe("Edit App Page", () => {
     const page = await EditAppPage({ params: defaultParams });
     render(page);
 
-    expect(screen.getByText("Webhook Security (Optional)")).toBeInTheDocument();
+    expect(screen.getByText("App ID & Secret")).toBeInTheDocument();
   });
 
   it("renders signature verification tab in webhook contract", async () => {

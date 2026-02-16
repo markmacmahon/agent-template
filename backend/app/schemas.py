@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Literal, Any, TypeVar
+from typing import Literal, Any, TypeVar, Generic
 
 from fastapi_users import schemas
 from pydantic import BaseModel, Field, field_validator
@@ -13,6 +13,11 @@ IntegrationMode = Literal["simulator", "webhook"]
 # ISO 639-1 two-letter language codes. Default is always English.
 SUPPORTED_LOCALES = ("en", "es", "pt")
 DEFAULT_LOCALE = "en"
+
+
+class CursorPage(BaseModel, Generic[T]):
+    items: list[T]
+    next_cursor: str | None = None
 
 
 class UserRead(schemas.BaseUser[uuid.UUID]):
@@ -161,6 +166,7 @@ class ThreadUpdate(BaseModel):
 class ThreadRead(ThreadBase):
     id: UUID
     app_id: UUID
+    subscriber_id: UUID | None = None
     status: Literal["active", "archived", "deleted"]
     created_at: datetime
     updated_at: datetime

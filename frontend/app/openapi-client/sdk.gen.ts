@@ -429,7 +429,7 @@ export const updateApp = <ThrowOnError extends boolean = false>(
 /**
  * List Threads
  *
- * List threads for the specified app, ordered by updated_at desc.
+ * List threads for the specified app, ordered by updated_at desc. Auth: JWT or X-App-Id + X-App-Secret.
  */
 export const listThreads = <ThrowOnError extends boolean = false>(
   options: Options<ListThreadsData, ThrowOnError>,
@@ -438,11 +438,7 @@ export const listThreads = <ThrowOnError extends boolean = false>(
     ListThreadsResponses,
     ListThreadsErrors,
     ThrowOnError
-  >({
-    security: [{ scheme: "bearer", type: "http" }],
-    url: "/apps/{app_id}/threads",
-    ...options,
-  });
+  >({ url: "/apps/{app_id}/threads", ...options });
 
 /**
  * Create Thread
@@ -452,6 +448,7 @@ export const listThreads = <ThrowOnError extends boolean = false>(
  * When no user message is provided (default), the backend adds an initial
  * assistant greeting as the clear entry point. The greeting is returned
  * in the response so the UI can show it instantly without a second request.
+ * Auth: JWT Bearer or X-App-Id + X-App-Secret.
  */
 export const createThread = <ThrowOnError extends boolean = false>(
   options: Options<CreateThreadData, ThrowOnError>,
@@ -461,7 +458,6 @@ export const createThread = <ThrowOnError extends boolean = false>(
     CreateThreadErrors,
     ThrowOnError
   >({
-    security: [{ scheme: "bearer", type: "http" }],
     url: "/apps/{app_id}/threads",
     ...options,
     headers: {
@@ -533,6 +529,7 @@ export const updateThread = <ThrowOnError extends boolean = false>(
  *
  * List messages for a thread with cursor-based pagination.
  * Messages are ordered by seq ascending (oldest first).
+ * Auth: JWT Bearer or X-App-Id + X-App-Secret.
  */
 export const listMessages = <ThrowOnError extends boolean = false>(
   options: Options<ListMessagesData, ThrowOnError>,
@@ -541,11 +538,7 @@ export const listMessages = <ThrowOnError extends boolean = false>(
     ListMessagesResponses,
     ListMessagesErrors,
     ThrowOnError
-  >({
-    security: [{ scheme: "bearer", type: "http" }],
-    url: "/apps/{app_id}/threads/{thread_id}/messages",
-    ...options,
-  });
+  >({ url: "/apps/{app_id}/threads/{thread_id}/messages", ...options });
 
 /**
  * Create Message
@@ -559,6 +552,7 @@ export const listMessages = <ThrowOnError extends boolean = false>(
  * 4. Updates thread.updated_at
  *
  * This approach guarantees concurrency-safe seq allocation.
+ * Auth: JWT Bearer or X-App-Id + X-App-Secret.
  */
 export const createMessage = <ThrowOnError extends boolean = false>(
   options: Options<CreateMessageData, ThrowOnError>,
@@ -568,7 +562,6 @@ export const createMessage = <ThrowOnError extends boolean = false>(
     CreateMessageErrors,
     ThrowOnError
   >({
-    security: [{ scheme: "bearer", type: "http" }],
     url: "/apps/{app_id}/threads/{thread_id}/messages",
     ...options,
     headers: {
@@ -585,6 +578,7 @@ export const createMessage = <ThrowOnError extends boolean = false>(
  * This allows the business owner (partner) to manually reply as the agent
  * through the dashboard UI. The message is created with role="agent" and
  * content_json.source="dashboard_agent" for proper attribution.
+ * Auth: JWT Bearer or X-App-Id + X-App-Secret.
  */
 export const createAssistantMessage = <ThrowOnError extends boolean = false>(
   options: Options<CreateAssistantMessageData, ThrowOnError>,
@@ -594,7 +588,6 @@ export const createAssistantMessage = <ThrowOnError extends boolean = false>(
     CreateAssistantMessageErrors,
     ThrowOnError
   >({
-    security: [{ scheme: "bearer", type: "http" }],
     url: "/apps/{app_id}/threads/{thread_id}/messages/assistant",
     ...options,
     headers: {
@@ -628,6 +621,7 @@ export const getMessage = <ThrowOnError extends boolean = false>(
  *
  * Returns subscribers ordered by last_message_at DESC (most recent first),
  * with thread count and optional last message preview.
+ * Auth: JWT Bearer or X-App-Id + X-App-Secret (app webhook secret).
  */
 export const listSubscribers = <ThrowOnError extends boolean = false>(
   options: Options<ListSubscribersData, ThrowOnError>,
@@ -636,16 +630,12 @@ export const listSubscribers = <ThrowOnError extends boolean = false>(
     ListSubscribersResponses,
     ListSubscribersErrors,
     ThrowOnError
-  >({
-    security: [{ scheme: "bearer", type: "http" }],
-    url: "/apps/{app_id}/subscribers",
-    ...options,
-  });
+  >({ url: "/apps/{app_id}/subscribers", ...options });
 
 /**
  * Get Subscriber
  *
- * Get subscriber detail.
+ * Get subscriber detail. Auth: JWT Bearer or X-App-Id + X-App-Secret.
  */
 export const getSubscriber = <ThrowOnError extends boolean = false>(
   options: Options<GetSubscriberData, ThrowOnError>,
@@ -654,11 +644,7 @@ export const getSubscriber = <ThrowOnError extends boolean = false>(
     GetSubscriberResponses,
     GetSubscriberErrors,
     ThrowOnError
-  >({
-    security: [{ scheme: "bearer", type: "http" }],
-    url: "/apps/{app_id}/subscribers/{subscriber_id}",
-    ...options,
-  });
+  >({ url: "/apps/{app_id}/subscribers/{subscriber_id}", ...options });
 
 /**
  * List Subscriber Threads
@@ -667,6 +653,7 @@ export const getSubscriber = <ThrowOnError extends boolean = false>(
  *
  * Returns threads ordered by updated_at DESC (most recent first),
  * with message count and optional last message preview.
+ * Auth: JWT Bearer or X-App-Id + X-App-Secret.
  */
 export const listSubscriberThreads = <ThrowOnError extends boolean = false>(
   options: Options<ListSubscriberThreadsData, ThrowOnError>,
@@ -675,11 +662,7 @@ export const listSubscriberThreads = <ThrowOnError extends boolean = false>(
     ListSubscriberThreadsResponses,
     ListSubscriberThreadsErrors,
     ThrowOnError
-  >({
-    security: [{ scheme: "bearer", type: "http" }],
-    url: "/apps/{app_id}/subscribers/{subscriber_id}/threads",
-    ...options,
-  });
+  >({ url: "/apps/{app_id}/subscribers/{subscriber_id}/threads", ...options });
 
 /**
  * Run Sync

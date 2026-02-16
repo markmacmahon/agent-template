@@ -1,5 +1,8 @@
 import { ChatContainer } from "@/components/chat-container";
-import { fetchThreads } from "@/components/actions/chat-actions";
+import {
+  fetchThreads,
+  fetchCurrentUserId,
+} from "@/components/actions/chat-actions";
 import { fetchAppById } from "@/components/actions/apps-action";
 import type { ThreadRead } from "@/app/openapi-client/index";
 
@@ -10,17 +13,19 @@ export default async function ChatPage({
 }) {
   const { id } = await params;
 
-  // Fetch app name and initial threads in parallel
-  const [appResult, threadsResult] = await Promise.all([
+  // Fetch app name, initial threads, and user ID in parallel
+  const [appResult, threadsResult, userResult] = await Promise.all([
     fetchAppById(id),
-    fetchThreads(id, 1, 50),
+    fetchThreads(id, undefined, 50),
+    fetchCurrentUserId(),
   ]);
 
   const appName = "data" in appResult ? appResult.data.name : undefined;
+  const userId = "data" in userResult ? userResult.data : undefined;
 
   let initialThreads: ThreadRead[] = [];
   if ("data" in threadsResult) {
-    initialThreads = threadsResult.data;
+    initialThreads = threadsResult.data.items ?? [];
   } else {
     console.error("Failed to fetch threads:", threadsResult.error);
   }
@@ -29,6 +34,7 @@ export default async function ChatPage({
     <ChatContainer
       appId={id}
       appName={appName}
+      userId={userId}
       initialThreads={initialThreads}
     />
   );

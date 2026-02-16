@@ -15,13 +15,17 @@ class TestValidateWebhookUrl:
     def test_valid_http_url(self):
         assert validate_webhook_url("http://example.com/webhook") is True
 
-    def test_rejects_localhost(self):
-        with pytest.raises(ValueError, match="blocked"):
-            validate_webhook_url("http://localhost/webhook")
+    def test_rejects_localhost_when_backend_not_on_localhost(self):
+        with patch("app.services.webhook_client.settings") as mock_settings:
+            mock_settings.BACKEND_URL = "https://api.example.com"
+            with pytest.raises(ValueError, match="blocked"):
+                validate_webhook_url("http://localhost/webhook")
 
-    def test_rejects_127_0_0_1(self):
-        with pytest.raises(ValueError, match="blocked"):
-            validate_webhook_url("http://127.0.0.1/webhook")
+    def test_rejects_127_0_0_1_when_backend_not_on_localhost(self):
+        with patch("app.services.webhook_client.settings") as mock_settings:
+            mock_settings.BACKEND_URL = "https://api.example.com"
+            with pytest.raises(ValueError, match="blocked"):
+                validate_webhook_url("http://127.0.0.1/webhook")
 
     def test_rejects_link_local(self):
         with pytest.raises(ValueError, match="blocked"):
@@ -38,6 +42,19 @@ class TestValidateWebhookUrl:
     def test_rejects_no_host(self):
         with pytest.raises(ValueError):
             validate_webhook_url("http://")
+
+    def test_allows_localhost_when_backend_url_is_localhost(self):
+        with patch("app.services.webhook_client.settings") as mock_settings:
+            mock_settings.BACKEND_URL = "http://localhost:8000"
+            assert validate_webhook_url("http://localhost:8080/webhook") is True
+            mock_settings.BACKEND_URL = "http://127.0.0.1:8000"
+            assert validate_webhook_url("http://127.0.0.1:8081/") is True
+
+    def test_rejects_private_ip_even_when_backend_is_localhost(self):
+        with patch("app.services.webhook_client.settings") as mock_settings:
+            mock_settings.BACKEND_URL = "http://localhost:8000"
+            with pytest.raises(ValueError, match="blocked"):
+                validate_webhook_url("http://192.168.1.1/webhook")
 
 
 class TestWebhookClient:
@@ -139,8 +156,10 @@ class TestWebhookClient:
     @pytest.mark.asyncio
     async def test_validates_url_on_init(self):
         """WebhookClient validates URL during construction."""
-        with pytest.raises(ValueError, match="blocked"):
-            WebhookClient(url="http://localhost/webhook", timeout_ms=5000)
+        with patch("app.services.webhook_client.settings") as mock_settings:
+            mock_settings.BACKEND_URL = "https://api.example.com"
+            with pytest.raises(ValueError, match="blocked"):
+                WebhookClient(url="http://localhost/webhook", timeout_ms=5000)
 
     @pytest.mark.asyncio
     async def test_send_stream_proxies_sse(self):

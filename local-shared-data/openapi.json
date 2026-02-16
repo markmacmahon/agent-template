@@ -938,13 +938,8 @@
           "threads"
         ],
         "summary": "Create Thread",
-        "description": "Create a new thread for the specified app.\n\nWhen no user message is provided (default), the backend adds an initial\nassistant greeting as the clear entry point. The greeting is returned\nin the response so the UI can show it instantly without a second request.",
+        "description": "Create a new thread for the specified app.\n\nWhen no user message is provided (default), the backend adds an initial\nassistant greeting as the clear entry point. The greeting is returned\nin the response so the UI can show it instantly without a second request.\nAuth: JWT Bearer or X-App-Id + X-App-Secret.",
         "operationId": "create_thread",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
         "parameters": [
           {
             "name": "app_id",
@@ -995,13 +990,8 @@
           "threads"
         ],
         "summary": "List Threads",
-        "description": "List threads for the specified app, ordered by updated_at desc.",
+        "description": "List threads for the specified app, ordered by updated_at desc. Auth: JWT or X-App-Id + X-App-Secret.",
         "operationId": "list_threads",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
         "parameters": [
           {
             "name": "app_id",
@@ -1014,31 +1004,36 @@
             }
           },
           {
-            "name": "page",
+            "name": "limit",
             "in": "query",
             "required": false,
             "schema": {
               "type": "integer",
+              "maximum": 200,
               "minimum": 1,
-              "description": "Page number",
-              "default": 1,
-              "title": "Page"
+              "description": "Max items to return",
+              "default": 25,
+              "title": "Limit"
             },
-            "description": "Page number"
+            "description": "Max items to return"
           },
           {
-            "name": "size",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "description": "Page size",
-              "default": 50,
-              "title": "Size"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Opaque cursor for pagination",
+              "title": "Cursor"
             },
-            "description": "Page size"
+            "description": "Opaque cursor for pagination"
           },
           {
             "name": "customer_id",
@@ -1083,7 +1078,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Page_ThreadRead_"
+                  "$ref": "#/components/schemas/CursorPage_ThreadRead_"
                 }
               }
             }
@@ -1258,13 +1253,8 @@
           "messages"
         ],
         "summary": "List Messages",
-        "description": "List messages for a thread with cursor-based pagination.\nMessages are ordered by seq ascending (oldest first).",
+        "description": "List messages for a thread with cursor-based pagination.\nMessages are ordered by seq ascending (oldest first).\nAuth: JWT Bearer or X-App-Id + X-App-Secret.",
         "operationId": "list_messages",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
         "parameters": [
           {
             "name": "app_id",
@@ -1351,13 +1341,8 @@
           "messages"
         ],
         "summary": "Create Message",
-        "description": "Append a new user message to the thread.\n\nThis endpoint:\n1. Locks the thread row (SELECT FOR UPDATE)\n2. Reads and increments next_seq atomically\n3. Creates the message with role=\"user\" and the allocated seq\n4. Updates thread.updated_at\n\nThis approach guarantees concurrency-safe seq allocation.",
+        "description": "Append a new user message to the thread.\n\nThis endpoint:\n1. Locks the thread row (SELECT FOR UPDATE)\n2. Reads and increments next_seq atomically\n3. Creates the message with role=\"user\" and the allocated seq\n4. Updates thread.updated_at\n\nThis approach guarantees concurrency-safe seq allocation.\nAuth: JWT Bearer or X-App-Id + X-App-Secret.",
         "operationId": "create_message",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
         "parameters": [
           {
             "name": "app_id",
@@ -1420,13 +1405,8 @@
           "messages"
         ],
         "summary": "Create Assistant Message",
-        "description": "Create an agent message (for partner/dashboard replies).\n\nThis allows the business owner (partner) to manually reply as the agent\nthrough the dashboard UI. The message is created with role=\"agent\" and\ncontent_json.source=\"dashboard_agent\" for proper attribution.",
+        "description": "Create an agent message (for partner/dashboard replies).\n\nThis allows the business owner (partner) to manually reply as the agent\nthrough the dashboard UI. The message is created with role=\"agent\" and\ncontent_json.source=\"dashboard_agent\" for proper attribution.\nAuth: JWT Bearer or X-App-Id + X-App-Secret.",
         "operationId": "create_assistant_message",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
         "parameters": [
           {
             "name": "app_id",
@@ -1538,13 +1518,8 @@
           "subscribers"
         ],
         "summary": "List Subscribers",
-        "description": "List subscribers for an app with pagination.\n\nReturns subscribers ordered by last_message_at DESC (most recent first),\nwith thread count and optional last message preview.",
+        "description": "List subscribers for an app with pagination.\n\nReturns subscribers ordered by last_message_at DESC (most recent first),\nwith thread count and optional last message preview.\nAuth: JWT Bearer or X-App-Id + X-App-Secret (app webhook secret).",
         "operationId": "list_subscribers",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
         "parameters": [
           {
             "name": "app_id",
@@ -1557,31 +1532,36 @@
             }
           },
           {
-            "name": "page",
+            "name": "limit",
             "in": "query",
             "required": false,
             "schema": {
               "type": "integer",
+              "maximum": 200,
               "minimum": 1,
-              "description": "Page number",
-              "default": 1,
-              "title": "Page"
+              "description": "Max items to return",
+              "default": 25,
+              "title": "Limit"
             },
-            "description": "Page number"
+            "description": "Max items to return"
           },
           {
-            "name": "size",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "description": "Page size",
-              "default": 50,
-              "title": "Size"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Opaque cursor for pagination",
+              "title": "Cursor"
             },
-            "description": "Page size"
+            "description": "Opaque cursor for pagination"
           },
           {
             "name": "q",
@@ -1608,7 +1588,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Page_SubscriberSummary_"
+                  "$ref": "#/components/schemas/CursorPage_SubscriberSummary_"
                 }
               }
             }
@@ -1632,13 +1612,8 @@
           "subscribers"
         ],
         "summary": "Get Subscriber",
-        "description": "Get subscriber detail.",
+        "description": "Get subscriber detail. Auth: JWT Bearer or X-App-Id + X-App-Secret.",
         "operationId": "get_subscriber",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
         "parameters": [
           {
             "name": "app_id",
@@ -1691,13 +1666,8 @@
           "subscribers"
         ],
         "summary": "List Subscriber Threads",
-        "description": "List threads for a subscriber with pagination.\n\nReturns threads ordered by updated_at DESC (most recent first),\nwith message count and optional last message preview.",
+        "description": "List threads for a subscriber with pagination.\n\nReturns threads ordered by updated_at DESC (most recent first),\nwith message count and optional last message preview.\nAuth: JWT Bearer or X-App-Id + X-App-Secret.",
         "operationId": "list_subscriber_threads",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
         "parameters": [
           {
             "name": "app_id",
@@ -1720,31 +1690,36 @@
             }
           },
           {
-            "name": "page",
+            "name": "limit",
             "in": "query",
             "required": false,
             "schema": {
               "type": "integer",
+              "maximum": 200,
               "minimum": 1,
-              "description": "Page number",
-              "default": 1,
-              "title": "Page"
+              "description": "Max items to return",
+              "default": 25,
+              "title": "Limit"
             },
-            "description": "Page number"
+            "description": "Max items to return"
           },
           {
-            "name": "size",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "description": "Page size",
-              "default": 50,
-              "title": "Size"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Opaque cursor for pagination",
+              "title": "Cursor"
             },
-            "description": "Page size"
+            "description": "Opaque cursor for pagination"
           }
         ],
         "responses": {
@@ -1753,7 +1728,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Page_ThreadSummary_"
+                  "$ref": "#/components/schemas/CursorPage_ThreadSummary_"
                 }
               }
             }
@@ -2202,6 +2177,87 @@
         ],
         "title": "Body_auth-verify:verify"
       },
+      "CursorPage_SubscriberSummary_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SubscriberSummary"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "CursorPage[SubscriberSummary]"
+      },
+      "CursorPage_ThreadRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ThreadRead"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "CursorPage[ThreadRead]"
+      },
+      "CursorPage_ThreadSummary_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ThreadSummary"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "CursorPage[ThreadSummary]"
+      },
       "ErrorModel": {
         "properties": {
           "detail": {
@@ -2385,204 +2441,6 @@
           "size"
         ],
         "title": "Page[AppRead]"
-      },
-      "Page_SubscriberSummary_": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/SubscriberSummary"
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "total": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Total"
-          },
-          "page": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 1.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Page"
-          },
-          "size": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 1.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Size"
-          },
-          "pages": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Pages"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "page",
-          "size"
-        ],
-        "title": "Page[SubscriberSummary]"
-      },
-      "Page_ThreadRead_": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/ThreadRead"
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "total": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Total"
-          },
-          "page": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 1.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Page"
-          },
-          "size": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 1.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Size"
-          },
-          "pages": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Pages"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "page",
-          "size"
-        ],
-        "title": "Page[ThreadRead]"
-      },
-      "Page_ThreadSummary_": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/ThreadSummary"
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "total": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Total"
-          },
-          "page": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 1.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Page"
-          },
-          "size": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 1.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Size"
-          },
-          "pages": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Pages"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "page",
-          "size"
-        ],
-        "title": "Page[ThreadSummary]"
       },
       "RunResponse": {
         "properties": {
@@ -2856,6 +2714,18 @@
             "type": "string",
             "format": "uuid",
             "title": "App Id"
+          },
+          "subscriber_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subscriber Id"
           },
           "status": {
             "type": "string",

@@ -9,9 +9,11 @@ import {
   listMessages,
   createMessage,
   createAssistantMessage as createAssistantMessageAPI,
+  usersCurrentUser,
   type ThreadRead,
   type MessageRead,
   type ThreadCreateResponse,
+  type CursorPageThreadRead,
 } from "@/app/clientService";
 
 type SuccessResult<T> = { data: T };
@@ -25,9 +27,9 @@ async function getAuthToken(): Promise<string | null> {
 
 export async function fetchThreads(
   appId: string,
-  page: number = 1,
-  size: number = 50,
-): Promise<ActionResult<ThreadRead[]>> {
+  cursor?: string,
+  limit: number = 25,
+): Promise<ActionResult<CursorPageThreadRead>> {
   const token = await getAuthToken();
   if (!token) {
     return { error: t("ERROR_NO_TOKEN") };
@@ -36,7 +38,7 @@ export async function fetchThreads(
   try {
     const { data, error } = await listThreads({
       path: { app_id: appId },
-      query: { page, size },
+      query: { cursor, limit },
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -54,7 +56,7 @@ export async function fetchThreads(
       return { error: t("ERROR_NO_DATA") };
     }
 
-    return { data: data.items || [] };
+    return { data };
   } catch (err) {
     return { error: err instanceof Error ? err.message : t("ERROR_UNKNOWN") };
   }
@@ -242,6 +244,27 @@ export async function createAssistantMessage(
     }
 
     return { data };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : t("ERROR_UNKNOWN") };
+  }
+}
+
+export async function fetchCurrentUserId(): Promise<ActionResult<string>> {
+  const token = await getAuthToken();
+  if (!token) {
+    return { error: t("ERROR_NO_TOKEN") };
+  }
+
+  try {
+    const { data, error } = await usersCurrentUser({
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (error || !data) {
+      return { error: t("ERROR_NO_DATA") };
+    }
+
+    return { data: data.id };
   } catch (err) {
     return { error: err instanceof Error ? err.message : t("ERROR_UNKNOWN") };
   }

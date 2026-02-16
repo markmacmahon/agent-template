@@ -73,6 +73,8 @@ This project supports multiple AI coding agents via the `AGENTS.md` convention:
 
 **To update AI instructions, edit only this file** (and the subproject `AGENTS.md` files). The pointer files should rarely change.
 
+**Reading order:** This file first. Then **docs/system-overview.md** for architecture, API, and stack. When working in backend or frontend, also read **backend/AGENTS.md** or **frontend/AGENTS.md**.
+
 ## Project Structure
 
 ```
@@ -81,6 +83,7 @@ agent-template/
 ├── CLAUDE.md                         # Pointer → AGENTS.md (for Claude Code)
 ├── .cursor/rules/project.mdc        # Pointer → AGENTS.md (for Cursor)
 ├── Makefile                          # Single operational interface (run from root)
+├── docs/                             # system-overview.md = architecture, API, stack
 ├── backend/                          # Python FastAPI backend (see backend/AGENTS.md)
 ├── frontend/                         # Next.js React frontend (see frontend/AGENTS.md)
 └── docker-compose.yml               # Docker services configuration

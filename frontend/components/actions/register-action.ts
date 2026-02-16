@@ -1,22 +1,28 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
-import { registerRegister } from "@/app/clientService";
+import { registerRegister, authJwtLogin } from "@/app/clientService";
 
 import { registerSchema } from "@/lib/definitions";
 import { getErrorMessage } from "@/lib/utils";
 import { t } from "@/i18n/keys";
 
 export async function register(prevState: unknown, formData: FormData) {
+  const rawEmail = (formData.get("email") as string) ?? "";
+  const rawPassword = (formData.get("password") as string) ?? "";
+
   const validatedFields = registerSchema.safeParse({
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
+    email: rawEmail,
+    password: rawPassword,
   });
 
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
+      email: rawEmail,
+      password: rawPassword,
     };
   }
 
@@ -31,13 +37,31 @@ export async function register(prevState: unknown, formData: FormData) {
   try {
     const { error } = await registerRegister(input);
     if (error) {
-      return { server_validation_error: getErrorMessage(error) };
+      return {
+        server_validation_error: getErrorMessage(error),
+        email: rawEmail,
+        password: rawPassword,
+      };
     }
   } catch (err) {
     console.error("Registration error:", err);
     return {
       server_error: t("ERROR_UNEXPECTED"),
+      email: rawEmail,
+      password: rawPassword,
     };
   }
-  redirect(`/auth/login`);
+
+  const { data, error: loginError } = await authJwtLogin({
+    body: { username: email, password },
+  });
+  if (loginError || !data?.access_token) {
+    return {
+      server_error: t("ERROR_UNEXPECTED"),
+      email: rawEmail,
+      password: rawPassword,
+    };
+  }
+  (await cookies()).set("accessToken", data.access_token);
+  redirect("/dashboard");
 }

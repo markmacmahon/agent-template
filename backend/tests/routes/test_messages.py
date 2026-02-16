@@ -1,6 +1,12 @@
+import uuid
+
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.config import settings
+from app.models import App
 
 
 @pytest.mark.asyncio
@@ -308,3 +314,148 @@ async def test_create_assistant_message_for_simulation(
     assert messages.json()[0]["role"] == "assistant"  # greeting
     assert messages.json()[1]["role"] == "user"
     assert messages.json()[2]["role"] == "assistant"
+
+
+@pytest.mark.asyncio
+async def test_create_assistant_message_with_app_secret_auth(
+    test_client: AsyncClient, authenticated_user, db_session: AsyncSession
+):
+    """POST .../messages/assistant with X-App-Id + X-App-Secret works without JWT."""
+    app_response = await test_client.post(
+        "/apps/",
+        json={"name": "Partner App"},
+        headers=authenticated_user["headers"],
+    )
+    assert app_response.status_code == 200
+    app_id = app_response.json()["id"]
+
+    thread_response = await test_client.post(
+        f"/apps/{app_id}/threads",
+        json={"title": "Thread"},
+        headers=authenticated_user["headers"],
+    )
+    thread_id = thread_response.json()["thread"]["id"]
+
+    await db_session.execute(
+        update(App)
+        .where(App.id == uuid.UUID(app_id))
+        .values(webhook_secret="msg-secret-123")
+    )
+    await db_session.commit()
+
+    response = await test_client.post(
+        f"/apps/{app_id}/threads/{thread_id}/messages/assistant",
+        json={"content": "Partner reply"},
+        headers={
+            settings.WEBHOOK_HEADER_APP_ID: app_id,
+            settings.WEBHOOK_HEADER_APP_SECRET: "msg-secret-123",
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["role"] == "assistant"
+    assert data["content"] == "Partner reply"
+
+
+@pytest.mark.asyncio
+async def test_create_message_updates_subscriber_activity(
+    test_client: AsyncClient, authenticated_user, db_session: AsyncSession
+):
+    """Sending a user message should update subscriber activity timestamps."""
+    from app.models import Subscriber
+    from sqlalchemy.future import select
+
+    # Create app
+    app_response = await test_client.post(
+        "/apps/",
+        json={"name": "Test App"},
+        headers=authenticated_user["headers"],
+    )
+    app_id = app_response.json()["id"]
+
+    # Create thread with customer_id (creates subscriber)
+    thread_response = await test_client.post(
+        f"/apps/{app_id}/threads",
+        json={"title": "Test Thread", "customer_id": "user-xyz"},
+        headers=authenticated_user["headers"],
+    )
+    thread_id = thread_response.json()["thread"]["id"]
+    subscriber_id = thread_response.json()["thread"]["subscriber_id"]
+    assert subscriber_id is not None
+
+    # Check subscriber before message
+    result = await db_session.execute(
+        select(Subscriber).filter(Subscriber.id == subscriber_id)
+    )
+    subscriber = result.scalars().first()
+    assert subscriber.last_message_at is None
+    assert subscriber.last_seen_at is not None
+    before_seen = subscriber.last_seen_at
+
+    # Send a user message
+    await test_client.post(
+        f"/apps/{app_id}/threads/{thread_id}/messages",
+        json={"content": "Hello!"},
+        headers=authenticated_user["headers"],
+    )
+
+    # Refresh and check last_message_at is now set
+    db_session.expire_all()
+    result = await db_session.execute(
+        select(Subscriber).filter(Subscriber.id == subscriber_id)
+    )
+    subscriber = result.scalars().first()
+    assert subscriber.last_message_at is not None
+    assert subscriber.last_seen_at is not None
+    assert subscriber.last_seen_at >= before_seen
+
+
+@pytest.mark.asyncio
+async def test_create_message_assigns_subscriber_if_missing(
+    test_client: AsyncClient, authenticated_user, db_session: AsyncSession
+):
+    """Posting to a legacy thread without subscriber_id creates/subscribes subscriber."""
+    from sqlalchemy.future import select
+    from app.models import Thread, Subscriber
+
+    # Create app + thread without subscriber_id via manual insert
+    app_response = await test_client.post(
+        "/apps/",
+        json={"name": "Legacy App"},
+        headers=authenticated_user["headers"],
+    )
+    app_id = app_response.json()["id"]
+
+    thread_response = await test_client.post(
+        f"/apps/{app_id}/threads",
+        json={"title": "Legacy Thread", "customer_id": "legacy-1"},
+        headers=authenticated_user["headers"],
+    )
+    thread_id = thread_response.json()["thread"]["id"]
+
+    # Simulate legacy row by clearing subscriber_id manually
+    await db_session.execute(
+        Thread.__table__.update()
+        .where(Thread.id == thread_id)
+        .values(subscriber_id=None)
+    )
+    await db_session.commit()
+
+    # Send message which should backfill subscriber
+    await test_client.post(
+        f"/apps/{app_id}/threads/{thread_id}/messages",
+        json={"content": "Hello"},
+        headers=authenticated_user["headers"],
+    )
+
+    db_session.expire_all()
+    result = await db_session.execute(select(Thread).filter(Thread.id == thread_id))
+    thread = result.scalars().first()
+    assert thread.subscriber_id is not None
+
+    sub_result = await db_session.execute(
+        select(Subscriber).filter(Subscriber.id == thread.subscriber_id)
+    )
+    subscriber = sub_result.scalars().first()
+    assert subscriber.customer_id == "legacy-1"
+    assert subscriber.last_message_at is not None

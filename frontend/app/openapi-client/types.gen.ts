@@ -155,6 +155,48 @@ export type BodyAuthVerifyVerify = {
 };
 
 /**
+ * CursorPage[SubscriberSummary]
+ */
+export type CursorPageSubscriberSummary = {
+  /**
+   * Items
+   */
+  items: Array<SubscriberSummary>;
+  /**
+   * Next Cursor
+   */
+  next_cursor?: string | null;
+};
+
+/**
+ * CursorPage[ThreadRead]
+ */
+export type CursorPageThreadRead = {
+  /**
+   * Items
+   */
+  items: Array<ThreadRead>;
+  /**
+   * Next Cursor
+   */
+  next_cursor?: string | null;
+};
+
+/**
+ * CursorPage[ThreadSummary]
+ */
+export type CursorPageThreadSummary = {
+  /**
+   * Items
+   */
+  items: Array<ThreadSummary>;
+  /**
+   * Next Cursor
+   */
+  next_cursor?: string | null;
+};
+
+/**
  * ErrorModel
  */
 export type ErrorModel = {
@@ -240,84 +282,6 @@ export type PageAppRead = {
    * Items
    */
   items: Array<AppRead>;
-  /**
-   * Total
-   */
-  total?: number | null;
-  /**
-   * Page
-   */
-  page: number | null;
-  /**
-   * Size
-   */
-  size: number | null;
-  /**
-   * Pages
-   */
-  pages?: number | null;
-};
-
-/**
- * Page[SubscriberSummary]
- */
-export type PageSubscriberSummary = {
-  /**
-   * Items
-   */
-  items: Array<SubscriberSummary>;
-  /**
-   * Total
-   */
-  total?: number | null;
-  /**
-   * Page
-   */
-  page: number | null;
-  /**
-   * Size
-   */
-  size: number | null;
-  /**
-   * Pages
-   */
-  pages?: number | null;
-};
-
-/**
- * Page[ThreadRead]
- */
-export type PageThreadRead = {
-  /**
-   * Items
-   */
-  items: Array<ThreadRead>;
-  /**
-   * Total
-   */
-  total?: number | null;
-  /**
-   * Page
-   */
-  page: number | null;
-  /**
-   * Size
-   */
-  size: number | null;
-  /**
-   * Pages
-   */
-  pages?: number | null;
-};
-
-/**
- * Page[ThreadSummary]
- */
-export type PageThreadSummary = {
-  /**
-   * Items
-   */
-  items: Array<ThreadSummary>;
   /**
    * Total
    */
@@ -479,6 +443,10 @@ export type ThreadRead = {
    * App Id
    */
   app_id: string;
+  /**
+   * Subscriber Id
+   */
+  subscriber_id?: string | null;
   /**
    * Status
    */
@@ -1289,17 +1257,17 @@ export type ListThreadsData = {
   };
   query?: {
     /**
-     * Page
+     * Limit
      *
-     * Page number
+     * Max items to return
      */
-    page?: number;
+    limit?: number;
     /**
-     * Size
+     * Cursor
      *
-     * Page size
+     * Opaque cursor for pagination
      */
-    size?: number;
+    cursor?: string | null;
     /**
      * Customer Id
      *
@@ -1329,7 +1297,7 @@ export type ListThreadsResponses = {
   /**
    * Successful Response
    */
-  200: PageThreadRead;
+  200: CursorPageThreadRead;
 };
 
 export type ListThreadsResponse =
@@ -1616,17 +1584,17 @@ export type ListSubscribersData = {
   };
   query?: {
     /**
-     * Page
+     * Limit
      *
-     * Page number
+     * Max items to return
      */
-    page?: number;
+    limit?: number;
     /**
-     * Size
+     * Cursor
      *
-     * Page size
+     * Opaque cursor for pagination
      */
-    size?: number;
+    cursor?: string | null;
     /**
      * Q
      *
@@ -1651,7 +1619,7 @@ export type ListSubscribersResponses = {
   /**
    * Successful Response
    */
-  200: PageSubscriberSummary;
+  200: CursorPageSubscriberSummary;
 };
 
 export type ListSubscribersResponse =
@@ -1706,17 +1674,17 @@ export type ListSubscriberThreadsData = {
   };
   query?: {
     /**
-     * Page
+     * Limit
      *
-     * Page number
+     * Max items to return
      */
-    page?: number;
+    limit?: number;
     /**
-     * Size
+     * Cursor
      *
-     * Page size
+     * Opaque cursor for pagination
      */
-    size?: number;
+    cursor?: string | null;
   };
   url: "/apps/{app_id}/subscribers/{subscriber_id}/threads";
 };
@@ -1735,7 +1703,7 @@ export type ListSubscriberThreadsResponses = {
   /**
    * Successful Response
    */
-  200: PageThreadSummary;
+  200: CursorPageThreadSummary;
 };
 
 export type ListSubscriberThreadsResponse =

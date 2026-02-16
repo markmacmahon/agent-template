@@ -1,4 +1,11 @@
-import { render, screen } from "@testing-library/react";
+import React from "react";
+import {
+  render,
+  screen,
+  fireEvent,
+  act,
+  waitFor,
+} from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { SubscribersContainer } from "@/components/subscribers-container";
 
@@ -17,16 +24,47 @@ jest.mock("../../components/breadcrumb-context", () => ({
 
 jest.mock("../../components/actions/subscribers-actions", () => ({
   fetchSubscribers: jest.fn().mockResolvedValue({
-    data: { items: [], page: 1, pages: 0, size: 50, total: 0 },
+    data: { items: [], next_cursor: null },
   }),
   fetchSubscriberThreads: jest.fn().mockResolvedValue({
-    data: { items: [], page: 1, pages: 0, size: 50, total: 0 },
+    data: { items: [], next_cursor: null },
   }),
 }));
 
+const mockSendMessage = jest.fn().mockResolvedValue({
+  data: {
+    id: "msg-1",
+    thread_id: "thread-1",
+    seq: 1,
+    role: "user",
+    content: "Hi",
+    content_json: {},
+    created_at: new Date().toISOString(),
+  },
+});
+
+jest.mock("../../components/actions/chat-actions", () => ({
+  sendMessage: (...args: unknown[]) => mockSendMessage(...args),
+}));
+
+const mockStreamScenario = jest.fn().mockResolvedValue(undefined);
+const mockRefreshMessages = jest.fn();
+
 jest.mock("../../components/thread-chat", () => ({
-  ThreadChat: ({ threadId }: { threadId: string }) => (
-    <div data-testid="thread-chat">Chat {threadId}</div>
+  ThreadChat: React.forwardRef(
+    (
+      { threadId }: { threadId: string },
+      ref: React.Ref<{
+        streamScenarioMessage: () => Promise<void>;
+        refreshMessages: () => void;
+      }>,
+    ) => {
+      React.useImperativeHandle(ref, () => ({
+        streamScenarioMessage: mockStreamScenario,
+        refreshMessages: mockRefreshMessages,
+      }));
+      return <div data-testid="thread-chat">Chat {threadId}</div>;
+    },
   ),
 }));
 
@@ -69,5 +107,35 @@ describe("SubscribersContainer", () => {
       "/dashboard/apps/app-1/subscribers",
       { scroll: false },
     );
+  });
+
+  it("runs scenario demo when option is selected", async () => {
+    jest.useFakeTimers();
+    render(
+      <SubscribersContainer
+        appId="app-1"
+        appName="Test App"
+        initialSubscriberId="sub-1"
+        initialThreadId="thread-1"
+      />,
+    );
+
+    await screen.findByTestId("thread-chat");
+
+    const trigger = screen.getByTestId("subscribers-scenario-select");
+    fireEvent.click(trigger);
+    const option = await screen.findByRole("option", {
+      name: /Customer Support/i,
+    });
+    fireEvent.click(option);
+
+    await act(async () => {
+      jest.runAllTimers();
+      await Promise.resolve();
+    });
+
+    await waitFor(() => expect(mockSendMessage).toHaveBeenCalled());
+    await waitFor(() => expect(mockStreamScenario).toHaveBeenCalled());
+    jest.useRealTimers();
   });
 });

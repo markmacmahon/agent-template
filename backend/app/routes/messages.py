@@ -6,8 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.database import User, get_async_session
-from app.models import App, Thread, Message
+from app.dependencies import get_thread_in_app_or_404, get_thread_in_app_with_lock
+from app.models import App, Subscriber, Thread, Message
 from app.schemas import MessageRead, MessageCreate
+from app.services.subscriber_service import resolve_subscriber
 from app.users import current_active_user
 
 router = APIRouter(tags=["messages"])
@@ -66,7 +68,7 @@ async def list_messages(
     app_id: UUID,
     thread_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    user: User = Depends(current_active_user),
+    thread: Thread = Depends(get_thread_in_app_or_404),
     before_seq: int | None = Query(
         None, description="Get messages before this sequence number (cursor pagination)"
     ),
@@ -77,9 +79,8 @@ async def list_messages(
     """
     List messages for a thread with cursor-based pagination.
     Messages are ordered by seq ascending (oldest first).
+    Auth: JWT Bearer or X-App-Id + X-App-Secret.
     """
-    # Verify thread ownership (no lock needed for reads)
-    await get_thread_by_id(thread_id, app_id, db, user)
 
     # Build query
     query = select(Message).filter(Message.thread_id == thread_id)
@@ -101,7 +102,7 @@ async def create_message(
     thread_id: UUID,
     message: MessageCreate,
     db: AsyncSession = Depends(get_async_session),
-    user: User = Depends(current_active_user),
+    thread: Thread = Depends(get_thread_in_app_with_lock),
 ):
     """
     Append a new user message to the thread.
@@ -113,14 +114,33 @@ async def create_message(
     4. Updates thread.updated_at
 
     This approach guarantees concurrency-safe seq allocation.
+    Auth: JWT Bearer or X-App-Id + X-App-Secret.
     """
-    # Get thread with lock to ensure atomic seq allocation
-    thread = await get_thread_with_lock(thread_id, app_id, db, user)
 
     # Allocate sequence number
     allocated_seq = thread.next_seq
     thread.next_seq += 1
     thread.updated_at = datetime.now(timezone.utc)
+
+    # Resolve subscriber and update activity
+    subscriber = None
+    if thread.subscriber_id:
+        result = await db.execute(
+            select(Subscriber).filter(Subscriber.id == thread.subscriber_id)
+        )
+        subscriber = result.scalars().first()
+    elif thread.customer_id:
+        subscriber = await resolve_subscriber(
+            db,
+            app_id=thread.app_id,
+            customer_id=thread.customer_id,
+        )
+        thread.subscriber_id = subscriber.id
+
+    if subscriber:
+        now = datetime.now(timezone.utc)
+        subscriber.last_seen_at = now
+        subscriber.last_message_at = now
 
     # Create message with allocated seq and role="user"
     db_message = Message(
@@ -145,7 +165,7 @@ async def create_assistant_message(
     thread_id: UUID,
     message: MessageCreate,
     db: AsyncSession = Depends(get_async_session),
-    user: User = Depends(current_active_user),
+    thread: Thread = Depends(get_thread_in_app_with_lock),
 ):
     """
     Create an agent message (for partner/dashboard replies).
@@ -153,9 +173,8 @@ async def create_assistant_message(
     This allows the business owner (partner) to manually reply as the agent
     through the dashboard UI. The message is created with role="agent" and
     content_json.source="dashboard_agent" for proper attribution.
+    Auth: JWT Bearer or X-App-Id + X-App-Secret.
     """
-    # Get thread with lock to ensure atomic seq allocation
-    thread = await get_thread_with_lock(thread_id, app_id, db, user)
 
     # Allocate sequence number
     allocated_seq = thread.next_seq

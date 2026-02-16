@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { MessageList } from "@/components/message-list";
 
@@ -87,5 +87,50 @@ describe("MessageList", () => {
 
     expect(screen.getByText(/I am streaming/)).toBeInTheDocument();
     expect(screen.getByTestId("message-streaming")).toBeInTheDocument();
+  });
+
+  it("shows pending indicator for optimistic message", () => {
+    const pendingMessages = [
+      {
+        id: "pending-1",
+        thread_id: "thread-1",
+        seq: 99,
+        role: "assistant" as const,
+        content: "Sending...",
+        content_json: {},
+        created_at: new Date().toISOString(),
+        pending: true,
+      },
+    ];
+
+    render(<MessageList messages={pendingMessages} />);
+
+    expect(screen.getAllByText(/sending/i).length).toBeGreaterThan(0);
+  });
+
+  it("renders retry button when pending message fails", () => {
+    const retry = jest.fn();
+    const erroredMessage = [
+      {
+        id: "pending-1",
+        thread_id: "thread-1",
+        seq: 99,
+        role: "assistant" as const,
+        content: "Hello",
+        content_json: {},
+        created_at: new Date().toISOString(),
+        error: "Failed",
+      },
+    ];
+
+    render(
+      <MessageList
+        messages={erroredMessage}
+        onRetryPending={(id) => retry(id)}
+      />,
+    );
+
+    fireEvent.click(screen.getByText(/retry/i));
+    expect(retry).toHaveBeenCalledWith("pending-1");
   });
 });

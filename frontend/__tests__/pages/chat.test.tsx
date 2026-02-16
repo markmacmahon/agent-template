@@ -11,7 +11,8 @@ jest.mock("../../components/chat-container", () => ({
 
 // Mock server actions that call cookies()
 jest.mock("../../components/actions/chat-actions", () => ({
-  fetchThreads: jest.fn().mockResolvedValue({ data: [] }),
+  fetchThreads: jest.fn().mockResolvedValue({ data: { items: [] } }),
+  fetchCurrentUserId: jest.fn().mockResolvedValue({ data: "test-user-id" }),
 }));
 
 jest.mock("../../components/actions/apps-action", () => ({

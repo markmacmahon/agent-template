@@ -1,20 +1,21 @@
-# ChatBot Application Starter
+# Partner Integration Platform
 
-Full-stack starter for building AI-powered ChatBot applications with Next.js and FastAPI.
+A full-stack platform where partners build conversational agents that plug into existing chatbots. Partners create **Apps** — each App is an integration point into the chatbot ecosystem, handling customer Q&A or complete transactional workflows (booking, ordering, support) as a skill within the host conversation.
 
 ## Overview
 
-Build production-ready ChatBot applications with this modern full-stack template. Combines FastAPI's async capabilities with Next.js for a responsive, type-safe development experience. Perfect for AI agents, conversational interfaces, and interactive applications.
+The **Partner Dashboard** is where partners create, configure, test, and monitor their Apps. Each App connects to the chatbot via a webhook, receiving customer messages and returning responses — either simple answers or multi-turn agent flows. A built-in simulator lets partners test their integration without deploying a backend.
 
 ### Features
 
-- **End-to-end type safety** with automatically generated OpenAPI clients
-- **Hot-reload development** with real-time frontend/backend synchronization
+- **Partner Dashboard** for creating and managing Apps, viewing subscribers, and monitoring conversations
+- **Webhook integration** with HMAC-SHA256 signing, SSE streaming, and in-app contract documentation
+- **Built-in simulator** for testing conversational flows without an external backend
+- **Real-time chat** with SSE token streaming, threaded conversations, and subscriber tracking
+- **End-to-end type safety** with auto-generated OpenAPI clients
 - **User authentication** via fastapi-users with JWT and password recovery
 - **PostgreSQL database** with async SQLAlchemy and Alembic migrations
 - **Modern UI** built with shadcn/ui and Tailwind CSS
-- **Docker support** for consistent development and deployment
-- **Test suite** with pytest and React Testing Library
 
 ## Technology Stack
 
@@ -278,32 +279,38 @@ Access the email inbox at http://localhost:8025
 
 ## Chat Interface
 
-The application includes a modern chat UI with real-time streaming:
+The dashboard includes a real-time chat UI for testing and monitoring conversations:
 
 - **SSE Streaming**: Token-by-token message display via Server-Sent Events
+- **Threaded conversations**: Each customer interaction is a separate thread
 - **Auto-resize Input**: Modern message input (44px-200px height)
 - **Collapsible Sidebar**: Thread management with slide animations
 - **Smart Scrolling**: Auto-scroll with manual override button
 - **Mobile Responsive**: Overlay sidebar on mobile devices
+- **Scenario demos**: Built-in presets (support triage, match commentary, reservations, surveys) stream canned user + assistant messages so stakeholders can experience long-running tasks without typing.
 
-### Testing the Chat
+### Testing Your App
 
-1. Create an app in the dashboard
-2. Click "Chat" to open the chat interface
-3. Send a message - it will stream in real-time using the simulator by default
+1. Create an App in the dashboard
+2. Configure integration mode — use the simulator for testing or set up your webhook
+3. Click "Chat" to open the chat interface and test the conversation flow
 
 ### Subscribers (conversations by customer)
 
-From the apps table or the app page, use **Subscribers** to view conversations grouped by customer. The page uses a 3-panel layout: subscribers list, threads for the selected subscriber, and the conversation. API: `GET /apps/{app_id}/subscribers`, `GET /apps/{app_id}/subscribers/{subscriber_id}/threads` (see OpenAPI at `/docs`).
+From the apps table or the app page, use **Subscribers** to view conversations grouped by customer. The page uses a 3-panel layout (subscribers → threads → chat) with cursor-based pagination (`limit` + `cursor` query params, response `{ items, next_cursor }`). API: `GET /apps/{app_id}/subscribers`, `GET /apps/{app_id}/subscribers/{subscriber_id}/threads` (see OpenAPI at `/docs`).
 
-See `WIP.md` for latest features and changes.
+## Documentation
+
+- **[docs/](docs/)** — Project docs. Index: [docs/README.md](docs/README.md). Main reference: [docs/system-overview.md](docs/system-overview.md).
+- **[examples/](examples/)** — Minimal webhook examples (Python stdlib, Node http). Run in separate processes; use ports 8080 / 8081 to avoid conflict with the main app (3000, 8000). See [examples/README.md](examples/README.md).
+- **AI assistants and contributors:** [AGENTS.md](AGENTS.md) first (workflow, conventions), then docs/system-overview.md (architecture, API).
 
 ## Next Steps
 
-1. Customize the authentication flow for your use case
-2. Configure integration mode (simulator or webhook) in app settings
-3. Add your own AI/chatbot backend via webhook integration
-4. Customize the chat UI components as needed
+1. Create an App and test with the built-in simulator
+2. Build your webhook endpoint — see the in-app contract documentation for request/response format
+3. Configure webhook URL and optional HMAC signing in your App settings
+4. Use the Subscribers view to monitor customer conversations
 5. Configure environment variables for production deployment
 
 ---

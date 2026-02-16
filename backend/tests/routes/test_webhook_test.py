@@ -20,15 +20,17 @@ async def _create_app(test_client: AsyncClient, headers: dict) -> str:
 async def test_webhook_test_rejects_invalid_url(
     test_client: AsyncClient, authenticated_user, db_session: AsyncSession
 ):
-    """Test endpoint rejects localhost/private URLs."""
+    """Test endpoint rejects localhost/private URLs when backend is not on localhost."""
     headers = authenticated_user["headers"]
     app_id = await _create_app(test_client, headers)
 
-    response = await test_client.post(
-        f"/apps/{app_id}/webhook/test",
-        json={"webhook_url": "http://localhost/hook"},
-        headers=headers,
-    )
+    with patch("app.services.webhook_client.settings") as mock_settings:
+        mock_settings.BACKEND_URL = "https://api.example.com"
+        response = await test_client.post(
+            f"/apps/{app_id}/webhook/test",
+            json={"webhook_url": "http://localhost/hook"},
+            headers=headers,
+        )
     assert response.status_code == 200
     data = response.json()
     assert data["ok"] is False

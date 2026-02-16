@@ -6,6 +6,14 @@
 
 ## Recent Changes
 
+### 2026-02-16 - Partner API (App ID + Secret) and credentials UI
+
+- **Partner API auth:** Routes under `/apps/{app_id}/...` (subscribers, threads, messages) accept **X-App-Id** + **X-App-Secret** when the app has a webhook secret; no login required. JWT still supported. Config: `WEBHOOK_HEADER_APP_SECRET` (default `X-App-Secret`). Backend tests: app-secret success (subscribers, threads, messages) and wrong secret → 401.
+- **Create app:** When webhook is selected, optional **App ID & Secret (optional)** section with secret field and Generate; CTA **Create app & save credentials**. Frontend unit test for webhook section.
+- **Edit app:** **App ID & Secret** section (App ID + copy, webhook secret + Generate/Copy/Clear); CTA **Save app & credentials**. Partner API doc on edit page: when app has secret, shows App ID + Secret flow (no login step); otherwise JWT flow.
+- **Docs:** `docs/system-overview.md` updated (authorization, Partner API, config, API quick start, E2E count).
+- **E2E:** Subscribers flow test for edit page Webhook mode (App ID & Secret, Save app & credentials visible).
+
 ### 2026-02-15 - Docs and terminology
 
 - **Docs:** Removed standalone Subscribers doc; Subscribers summary and 3-panel layout moved into README. No "inbox" terminology.

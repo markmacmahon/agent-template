@@ -169,6 +169,203 @@ def verify_signature(secret, timestamp, body, signature):
     ).hexdigest()
     return hmac.compare_digest(expected, signature)`;
 
+const PARTNER_API_HEADERS_APP_SECRET = (appId: string) =>
+  `-H "X-App-Id: ${appId}" -H "X-App-Secret: YOUR_WEBHOOK_SECRET"`;
+
+function PartnerApiDoc({
+  baseUrl,
+  appId,
+  hasWebhookSecret,
+  copyToClipboard,
+}: {
+  baseUrl: string;
+  appId: string;
+  hasWebhookSecret: boolean;
+  copyToClipboard: (text: string) => void;
+}) {
+  const authHeaders = hasWebhookSecret
+    ? PARTNER_API_HEADERS_APP_SECRET(appId)
+    : `-H "Authorization: Bearer YOUR_ACCESS_TOKEN"`;
+
+  const loginCurl = `curl -X POST ${baseUrl}/auth/jwt/login \\
+  -H "Content-Type: application/x-www-form-urlencoded" \\
+  -d "username=YOUR_EMAIL&password=YOUR_PASSWORD"`;
+  const authExampleCurl = `# Every request needs these headers:
+curl -X GET "${baseUrl}/apps/${appId}/subscribers?limit=20" \\
+  ${PARTNER_API_HEADERS_APP_SECRET(appId)}`;
+
+  const listSubscribersCurl = `curl -X GET "${baseUrl}/apps/${appId}/subscribers?limit=20" \\
+  ${authHeaders}`;
+  const listThreadsCurl = `curl -X GET "${baseUrl}/apps/${appId}/subscribers/SUBSCRIBER_ID/threads?limit=20" \\
+  ${authHeaders}`;
+  const postMessageCurl = `curl -X POST ${baseUrl}/apps/${appId}/threads/THREAD_ID/messages/assistant \\
+  ${authHeaders} \\
+  -H "Content-Type: application/json" \\
+  -d '{"content":"Your assistant reply here"}'`;
+
+  return (
+    <div className="space-y-6 text-sm">
+      <p className="text-muted-foreground">
+        {hasWebhookSecret
+          ? t("PARTNER_API_INTRO_WITH_SECRET")
+          : t("PARTNER_API_INTRO")}
+      </p>
+
+      <div className="grid gap-2 rounded-md bg-muted/50 p-3">
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-medium text-foreground">
+            {t("PARTNER_API_BASE_URL")}
+          </span>
+          <button
+            type="button"
+            onClick={() => copyToClipboard(baseUrl)}
+            className="text-muted-foreground hover:text-foreground"
+            title="Copy"
+          >
+            <Copy className="h-4 w-4" />
+          </button>
+        </div>
+        <code className="block break-all font-mono text-xs text-foreground">
+          {baseUrl}
+        </code>
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-medium text-foreground">
+            {hasWebhookSecret
+              ? t("PARTNER_API_APP_ID_FOR_SECRET")
+              : t("PARTNER_API_APP_ID")}
+          </span>
+          <button
+            type="button"
+            onClick={() => copyToClipboard(appId)}
+            className="text-muted-foreground hover:text-foreground"
+            title="Copy"
+          >
+            <Copy className="h-4 w-4" />
+          </button>
+        </div>
+        <code className="block break-all font-mono text-xs text-foreground">
+          {appId}
+        </code>
+      </div>
+
+      {hasWebhookSecret ? (
+        <div>
+          <h3 className="font-medium text-foreground">
+            {t("PARTNER_API_AUTH_APP_SECRET")}
+          </h3>
+          <p className="mt-1 text-muted-foreground">
+            {t("PARTNER_API_AUTH_APP_SECRET_DESC")}
+          </p>
+          <div className="relative mt-2">
+            <button
+              type="button"
+              onClick={() => copyToClipboard(authExampleCurl)}
+              className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
+              title="Copy"
+            >
+              <Copy className="h-4 w-4" />
+            </button>
+            <pre className="rounded-md bg-muted p-3 pr-10 text-xs overflow-x-auto text-foreground whitespace-pre-wrap">
+              {authExampleCurl}
+            </pre>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <h3 className="font-medium text-foreground">
+            {t("PARTNER_API_STEP_1")}
+          </h3>
+          <p className="mt-1 text-muted-foreground">
+            {t("PARTNER_API_STEP_1_DESC")}
+          </p>
+          <div className="relative mt-2">
+            <button
+              type="button"
+              onClick={() => copyToClipboard(loginCurl)}
+              className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
+              title="Copy"
+            >
+              <Copy className="h-4 w-4" />
+            </button>
+            <pre className="rounded-md bg-muted p-3 pr-10 text-xs overflow-x-auto text-foreground">
+              {loginCurl}
+            </pre>
+          </div>
+        </div>
+      )}
+
+      <div>
+        <h3 className="font-medium text-foreground">
+          {hasWebhookSecret ? "2. " : ""}
+          {t("PARTNER_API_STEP_2")}
+        </h3>
+        <p className="mt-1 text-muted-foreground">
+          {t("PARTNER_API_STEP_2_DESC")}
+        </p>
+        <div className="relative mt-2">
+          <button
+            type="button"
+            onClick={() => copyToClipboard(listSubscribersCurl)}
+            className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
+            title="Copy"
+          >
+            <Copy className="h-4 w-4" />
+          </button>
+          <pre className="rounded-md bg-muted p-3 pr-10 text-xs overflow-x-auto text-foreground">
+            {listSubscribersCurl}
+          </pre>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="font-medium text-foreground">
+          {hasWebhookSecret ? "3. " : ""}
+          {t("PARTNER_API_STEP_3")}
+        </h3>
+        <p className="mt-1 text-muted-foreground">
+          {t("PARTNER_API_STEP_3_DESC")}
+        </p>
+        <div className="relative mt-2">
+          <button
+            type="button"
+            onClick={() => copyToClipboard(listThreadsCurl)}
+            className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
+            title="Copy"
+          >
+            <Copy className="h-4 w-4" />
+          </button>
+          <pre className="rounded-md bg-muted p-3 pr-10 text-xs overflow-x-auto text-foreground">
+            {listThreadsCurl}
+          </pre>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="font-medium text-foreground">
+          {hasWebhookSecret ? "4. " : ""}
+          {t("PARTNER_API_STEP_4")}
+        </h3>
+        <p className="mt-1 text-muted-foreground">
+          {t("PARTNER_API_STEP_4_DESC")}
+        </p>
+        <div className="relative mt-2">
+          <button
+            type="button"
+            onClick={() => copyToClipboard(postMessageCurl)}
+            className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
+            title="Copy"
+          >
+            <Copy className="h-4 w-4" />
+          </button>
+          <pre className="rounded-md bg-muted p-3 pr-10 text-xs overflow-x-auto text-foreground">
+            {postMessageCurl}
+          </pre>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface EditAppFormProps {
   app: {
     id: string;
@@ -210,6 +407,11 @@ export function EditAppForm({ app }: EditAppFormProps) {
   const [contractTab, setContractTab] = useState<
     "request" | "response" | "examples" | "signing"
   >("request");
+
+  const apiBaseUrl =
+    (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_BASE_URL) ||
+    "http://localhost:8000";
+  const base = apiBaseUrl.replace(/\/$/, "");
   const [sseExpanded, setSseExpanded] = useState(false);
 
   const copyToClipboard = (text: string) => {
@@ -450,6 +652,9 @@ export function EditAppForm({ app }: EditAppFormProps) {
                 {state.errors.webhook_url}
               </p>
             )}
+            <p className="text-muted-foreground text-sm">
+              {t("WEBHOOK_URL_CORS_NOTE")}
+            </p>
 
             {/* Status pill */}
             <div className="flex items-center gap-2">
@@ -476,15 +681,33 @@ export function EditAppForm({ app }: EditAppFormProps) {
           </div>
         )}
 
-        {/* === Webhook Security (only if webhook) === */}
+        {/* === App ID & Secret (only if webhook) === */}
         {selectedMode === "webhook" && (
           <div className="space-y-4 border-t border-border pt-6">
             <h2 className="text-lg font-semibold">
-              {t("WEBHOOK_SECURITY_HEADING")}
+              {t("PARTNER_API_CREDENTIALS_HEADING")}
             </h2>
             <p className="text-sm text-muted-foreground">
-              {t("WEBHOOK_SECURITY_DESC")}
+              {t("PARTNER_API_CREDENTIALS_INTRO")}
             </p>
+            <div className="space-y-2">
+              <Label>{t("PARTNER_API_APP_ID_FOR_SECRET")}</Label>
+              <div className="flex gap-2 flex-wrap items-center">
+                <code className="rounded-md bg-muted px-2 py-1.5 font-mono text-sm text-foreground">
+                  {app.id}
+                </code>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => copyToClipboard(app.id)}
+                  title="Copy"
+                  aria-label="Copy App ID"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="webhook_secret">
                 {t("WEBHOOK_SECRET_LABEL")}
@@ -572,7 +795,13 @@ export function EditAppForm({ app }: EditAppFormProps) {
           </>
         )}
 
-        <SubmitButton text={t("APP_EDIT_SUBMIT")} />
+        <SubmitButton
+          text={
+            selectedMode === "webhook"
+              ? t("APP_EDIT_SUBMIT_WEBHOOK")
+              : t("APP_EDIT_SUBMIT")
+          }
+        />
 
         {state?.message && (
           <div className="mt-2 text-center text-sm text-destructive">
@@ -882,6 +1111,19 @@ X-Signature: sha256=...`}
           )}
         </div>
       )}
+
+      {/* === Partner API (always visible: list subscribers, post to thread) === */}
+      <div className="bg-card rounded-lg shadow-lg p-8 mt-6">
+        <h2 className="text-lg font-semibold">
+          {t("WEBHOOK_TAB_PARTNER_API")}
+        </h2>
+        <PartnerApiDoc
+          baseUrl={base}
+          appId={app.id}
+          hasWebhookSecret={!!app.webhook_secret}
+          copyToClipboard={copyToClipboard}
+        />
+      </div>
 
       {/* === Streaming Responses (Collapsible, only if webhook) === */}
       {selectedMode === "webhook" && (

@@ -7,14 +7,21 @@ from urllib.parse import urlparse
 
 import httpx
 
+from app.config import settings
 from app.schemas import RunResult
 from app.i18n import t
 
 logger = logging.getLogger(__name__)
 
-# Hosts that must never be called as webhooks
+# Hosts that must never be called as webhooks (unless they are the backend host, e.g. local dev)
 _BLOCKED_HOSTS = {"localhost", "127.0.0.1", "0.0.0.0"}  # noqa: S104
 _BLOCKED_PREFIXES = ("169.254.", "10.", "192.168.")
+
+
+def _backend_host() -> str | None:
+    """Host of BACKEND_URL; webhook URLs to this host are allowed when it's normally blocked."""
+    parsed = urlparse(settings.BACKEND_URL)
+    return parsed.hostname if parsed.hostname else None
 
 
 class WebhookError(Exception):
@@ -25,6 +32,7 @@ def validate_webhook_url(url: str) -> bool:
     """Validate that a webhook URL is safe to call.
 
     Raises ValueError if the URL is invalid or targets a blocked host.
+    The host from BACKEND_URL is allowed (so when the backend is on localhost, localhost webhooks work).
     """
     if not url:
         raise ValueError(t("WEBHOOK_URL_EMPTY"))
@@ -37,6 +45,10 @@ def validate_webhook_url(url: str) -> bool:
     host = parsed.hostname or ""
     if not host:
         raise ValueError(t("WEBHOOK_URL_NO_HOST"))
+
+    backend_host = _backend_host()
+    if backend_host and host == backend_host and host in _BLOCKED_HOSTS:
+        return True
 
     if host in _BLOCKED_HOSTS:
         raise ValueError(t("WEBHOOK_URL_BLOCKED", host=host))

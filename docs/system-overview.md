@@ -1,10 +1,10 @@
 # System Overview
 
-This document provides a comprehensive overview of the ChatBot Application Starter — a full-stack platform for building, testing, and deploying AI-powered chatbot applications. It is intended as a reference for collaborators joining the project.
+This document provides a comprehensive overview of the Partner Integration Platform — a full-stack system where partners build conversational agents that plug into existing chatbots. It is intended as a reference for collaborators joining the project.
 
 ## What This System Does
 
-The platform lets **partners** (business owners, developers) create chatbot **apps**, each of which can converse with **subscribers** (end customers) through threaded conversations. Messages flow through a configurable integration layer that can use a built-in simulator for testing or forward to an external webhook for production AI/LLM processing. The chat interface supports real-time streaming via Server-Sent Events (SSE).
+The platform lets **partners** (business owners, developers) create **Apps** — each App is the partner's integration point into the chatbot ecosystem. Through their App, partners handle customer **Q&A** (answering questions within their domain) or **agent-to-agent workflows** (transactional flows like booking, ordering, or support) as a skill within the host conversation. **Subscribers** (end customers) interact through threaded conversations. Messages flow through a configurable integration layer that can use a built-in simulator for testing or forward to an external webhook for production AI/LLM processing. The chat interface supports real-time streaming via Server-Sent Events (SSE).
 
 ---
 
@@ -34,9 +34,9 @@ The dashboard is the main workspace after login. It has a fixed left sidebar and
 
 | Action | Description |
 |--------|-------------|
-| Create app | Name, description, integration mode (simulator or webhook), simulator scenario, webhook URL/secret |
+| Create app | Name, description, integration mode (simulator or webhook), simulator scenario preset, webhook URL; when webhook is selected, optional **App ID & Secret** section (set or generate a secret at creation so the app can use the Partner API without login) |
 | View app | Hub page with links to Chat, Subscribers, and Edit |
-| Edit app | All fields editable; webhook testing UI; webhook contract documentation; streaming docs |
+| Edit app | All fields editable; **App ID & Secret** section when webhook is selected (App ID read-only + copy, webhook secret with Generate/Copy/Clear); webhook testing UI; webhook contract and **Partner API** documentation; streaming docs. Primary CTA when webhook: **Save app & credentials**. |
 | Delete app | Confirmation dialog; cascades to all threads, messages, and subscribers |
 
 ### Integration Modes
@@ -44,8 +44,7 @@ The dashboard is the main workspace after login. It has a fixed left sidebar and
 Each app is configured with one of two integration modes, which control how assistant responses are generated:
 
 **Simulator** (default) — No external dependencies. Generates deterministic canned responses for testing.
-- *Generic* scenario: echoes user messages (`Echo: <message>`).
-- *E-Commerce Support* scenario: cycles through 5 realistic order/refund responses.
+- Scenario presets (customer support triage, live match commentary, restaurant reservation, survey) are selectable in the dashboard. Each preset streams canned responses chunk-by-chunk with timed delays so teams can demo long-running workflows end-to-end.
 - Optional `[Simulated]` disclaimer prefix.
 
 **Webhook** — Forwards user messages to an external URL and returns the response.
@@ -54,10 +53,11 @@ Each app is configured with one of two integration modes, which control how assi
 - Supports SSE streaming responses from the webhook (proxied to the user).
 - Webhook test UI: send a sample message, view status code, latency, response, and signature status.
 - In-app documentation with request/response contract, code examples (Node.js Express, Python FastAPI), and signing verification guides.
+- **Partner API**: When the app has a webhook secret set, the edit page shows a **Partner API** section with base URL and App ID, and documents **App ID + Secret** auth (headers `X-App-Id` and `X-App-Secret`) so partners can call the API (list subscribers, list threads, post messages) without logging in. If no secret is set, the doc shows the JWT (login) flow instead.
 
 ### Chat Interface
 
-A real-time conversational UI accessible from any app:
+A real-time conversational UI accessible from any app. Dashboard routes: thread list at `apps/[app_id]/threads` (or via Chat from the app page), conversation at `apps/[app_id]/threads/[thread_id]`.
 
 - **Thread-based** — Each conversation is a thread with sequential messages.
 - **Auto-greeting** — A greeting message from the assistant is created when a new thread starts.
@@ -117,7 +117,7 @@ agent-template/
 │   │   ├── users.py      # fastapi-users auth configuration
 │   │   ├── email.py      # Password reset email via FastMail
 │   │   ├── database.py   # Async engine, session factory
-│   │   ├── dependencies.py # Auth + ownership guards
+│   │   ├── dependencies.py # Auth + ownership; get_app_for_request (JWT or X-App-Id + X-App-Secret) for Partner API
 │   │   ├── routes/       # HTTP endpoints (apps, threads, messages, run, subscribers, webhook_test)
 │   │   ├── services/     # Domain logic (orchestrator, simulator, webhook_client, webhook_signing, message_service)
 │   │   └── i18n/         # Backend-internal translated strings
@@ -166,7 +166,11 @@ This guarantees no duplicate seq numbers under concurrent writes, deterministic 
 
 #### Authorization
 
-All endpoints enforce `app.user_id == current_user.id`. Only the app owner can access their threads, messages, and subscribers.
+- **Dashboard and app-scoped routes** (e.g. `/apps/{id}`, `/threads/{id}`): JWT required; ownership enforced via `app.user_id == current_user.id`.
+- **Partner API routes** (under `/apps/{app_id}/...`): **Subscribers** (list, get, list threads), **Threads** (create, list), and **Messages** (list, create user, create assistant) accept **either**:
+  - **JWT** — `Authorization: Bearer <token>` (same as dashboard), or
+  - **App ID + Secret** — headers `X-App-Id` (app UUID) and `X-App-Secret` (the app’s webhook secret). The app must have a webhook secret set. Validated with constant-time comparison.
+- So partners can integrate without storing user credentials: they use the App ID (shown on the app edit page) and the webhook secret on every request.
 
 ### API Endpoints
 
@@ -197,7 +201,7 @@ All endpoints enforce `app.user_id == current_user.id`. Only the app owner can a
 | Method | Path | Purpose |
 |--------|------|---------|
 | POST | `/apps/{app_id}/threads` | Create thread (returns greeting message) |
-| GET | `/apps/{app_id}/threads` | List threads (filterable by customer_id, status) |
+| GET | `/apps/{app_id}/threads` | List threads (filterable by customer_id/status, cursor pagination with `{items,next_cursor}`) |
 | GET | `/threads/{id}` | Get thread |
 | PATCH | `/threads/{id}` | Update thread |
 | DELETE | `/threads/{id}` | Delete thread |
@@ -210,6 +214,10 @@ All endpoints enforce `app.user_id == current_user.id`. Only the app owner can a
 | POST | `/apps/{app_id}/threads/{thread_id}/messages/assistant` | Send assistant message |
 | GET | `/apps/{app_id}/threads/{thread_id}/messages` | List messages (cursor pagination via `before_seq`) |
 | GET | `/messages/{id}` | Get single message |
+
+**Threads — request/response:** Create thread `POST /apps/{app_id}/threads` accepts `{ "title": "optional", "customer_id": "optional" }` and returns the thread object (id, app_id, title, status, customer_id, created_at, updated_at). List threads supports query params `customer_id`, `status`, and cursor pagination (`limit`, `cursor`); response `{ "items": [...], "next_cursor": "..." }`.
+
+**Messages — request/response:** Send user message `POST .../messages` body `{ "content": "text", "content_json": {} }`; role is set to `user`. Send assistant reply `POST .../threads/{thread_id}/messages/assistant` same body; role is set to `assistant`. List messages `GET .../messages` accepts `before_seq` (cursor) and `limit` (default 50, max 200); returns an array of message objects ordered by `seq` ascending (oldest first). Each message has id, thread_id, seq, role, content, content_json, created_at.
 
 #### Chat Execution
 
@@ -224,9 +232,9 @@ SSE event types: `meta` (source info), `delta` (text chunk), `done` (final messa
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| GET | `/apps/{app_id}/subscribers` | List subscribers (searchable by customer_id, display_name) |
+| GET | `/apps/{app_id}/subscribers` | List subscribers with `limit` + `cursor` parameters (returns `{items,next_cursor}`) |
 | GET | `/apps/{app_id}/subscribers/{id}` | Get subscriber |
-| GET | `/apps/{app_id}/subscribers/{id}/threads` | List subscriber threads |
+| GET | `/apps/{app_id}/subscribers/{id}/threads` | List subscriber threads with cursor pagination |
 
 ### Services Layer
 
@@ -270,8 +278,8 @@ File watchers (`backend/watcher.py`, `frontend/watcher.js`) auto-regenerate on c
 
 ### Security
 
-- JWT authentication on all protected endpoints.
-- App ownership enforced: users can only access their own apps, threads, messages, and subscribers.
+- JWT authentication on protected endpoints; **Partner API** routes also accept **X-App-Id + X-App-Secret** when the app has a webhook secret (no login required for partners).
+- App ownership enforced: users can only access their own apps, threads, messages, and subscribers; app-secret auth grants access only to that app’s resources.
 - Webhook URL validation: blocks `localhost`, `127.0.0.1`, private networks (`10.x.x.x`, `192.168.x.x`, `169.254.x.x`).
 - HMAC-SHA256 webhook signing for request authenticity.
 - Password requirements: 8+ characters, uppercase, special character.
@@ -292,6 +300,9 @@ Backend settings are loaded from `backend/.env` via Pydantic BaseSettings:
 | `VERIFICATION_SECRET_KEY` | Email verification secret | Dev default |
 | `CORS_ORIGINS` | Allowed origins | `localhost:3000`, `localhost:8000` |
 | `FRONTEND_URL` | Frontend base URL | `http://localhost:3000` |
+| `BACKEND_URL` | Backend base URL; webhook URLs to this host are allowed when it is localhost | `http://localhost:8000` |
+| `WEBHOOK_HEADER_APP_ID` | Header name for Partner API app ID | `X-App-Id` |
+| `WEBHOOK_HEADER_APP_SECRET` | Header name for Partner API app secret | `X-App-Secret` |
 | `MAIL_*` | SMTP settings (MailHog locally) | localhost:1025 |
 
 Frontend settings via `frontend/.env.local`:
@@ -313,7 +324,7 @@ E2E tests auto-start both backend and frontend servers. Prerequisites: Docker da
 
 E2E test coverage:
 - **Chat flow** (5 tests): full send/receive, sidebar toggle, simulator settings, auto-create thread, new conversation.
-- **Subscribers flow** (5 tests): navigation, 3-panel layout, app page actions.
+- **Subscribers flow** (6 tests): navigation, 3-panel layout, app page actions, edit page with Webhook mode (App ID & Secret section and Save app & credentials CTA).
 
 ### Development Workflow
 
@@ -346,7 +357,7 @@ make precommit              # Lint + format + type check
 
 ### API Quick Start (curl)
 
-Register, create an app, and start a conversation using the API directly:
+Register, create an App, and start a conversation using the API directly:
 
 ```bash
 # Register and login
@@ -360,19 +371,19 @@ curl -X POST http://localhost:8000/auth/jwt/login \
 # Save the token from the response
 export TOKEN="<your-token>"
 
-# Create an app
+# Create an App
 curl -X POST http://localhost:8000/apps/ \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"name":"My Chatbot","description":"Customer support"}'
+  -d '{"name":"Restaurant Booking","description":"Handles table reservations"}'
 export APP_ID="<app-id>"
 
-# Create a thread
+# Create a thread (returns { "thread": {...}, "initial_message": {...} })
 curl -X POST http://localhost:8000/apps/$APP_ID/threads \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"title":"Alice Support","customer_id":"alice_123"}'
-export THREAD_ID="<thread-id>"
+export THREAD_ID="<thread-id from response.thread.id>"
 
 # Send a user message
 curl -X POST http://localhost:8000/apps/$APP_ID/threads/$THREAD_ID/messages \
@@ -380,7 +391,7 @@ curl -X POST http://localhost:8000/apps/$APP_ID/threads/$THREAD_ID/messages \
   -H "Content-Type: application/json" \
   -d '{"content":"Hi, I need help with my order"}'
 
-# Send an assistant reply (dashboard agent)
+# Send an assistant reply (partner agent)
 curl -X POST http://localhost:8000/apps/$APP_ID/threads/$THREAD_ID/messages/assistant \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
@@ -389,6 +400,23 @@ curl -X POST http://localhost:8000/apps/$APP_ID/threads/$THREAD_ID/messages/assi
 # View the conversation
 curl http://localhost:8000/apps/$APP_ID/threads/$THREAD_ID/messages \
   -H "Authorization: Bearer $TOKEN"
+```
+
+**Partner API (no login):** If the app has a webhook secret set, you can call the same endpoints with headers instead of JWT:
+
+```bash
+export APP_ID="<your-app-uuid>"
+export APP_SECRET="<webhook-secret-from-app-settings>"
+
+curl -X GET "http://localhost:8000/apps/$APP_ID/subscribers?limit=20" \
+  -H "X-App-Id: $APP_ID" \
+  -H "X-App-Secret: $APP_SECRET"
+
+curl -X POST http://localhost:8000/apps/$APP_ID/threads/$THREAD_ID/messages/assistant \
+  -H "X-App-Id: $APP_ID" \
+  -H "X-App-Secret: $APP_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"content":"Partner reply"}'
 ```
 
 ### Chat Flow Diagram

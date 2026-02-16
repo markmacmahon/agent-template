@@ -22,12 +22,14 @@ import { t } from "@/i18n/keys";
 interface ChatContainerProps {
   appId: string;
   appName?: string;
+  userId?: string;
   initialThreads?: ThreadRead[];
 }
 
 export function ChatContainer({
   appId,
   appName,
+  userId,
   initialThreads = [],
 }: ChatContainerProps) {
   const [threads, setThreads] = useState<ThreadRead[]>(initialThreads);
@@ -102,7 +104,9 @@ export function ChatContainer({
 
       // Auto-create thread if none selected (backend returns thread + greeting)
       if (!threadId) {
-        const customerId = `customer-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        const customerId =
+          userId ||
+          `customer-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
         const threadResult = await createNewThread(
           appId,
           customerId,
@@ -136,12 +140,14 @@ export function ChatContainer({
 
       startStream(threadId);
     },
-    [appId, selectedThreadId, startStream],
+    [appId, userId, selectedThreadId, startStream],
   );
 
   /** Default UI: create thread immediately so greeting is the clear entry point (no user message). */
   const handleNewConversation = useCallback(async () => {
-    const customerId = `customer-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const customerId =
+      userId ||
+      `customer-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     const threadResult = await createNewThread(appId, customerId, "");
     if ("error" in threadResult) {
       console.error("Failed to create thread:", threadResult.error);
@@ -154,7 +160,7 @@ export function ChatContainer({
     if (typeof window !== "undefined" && window.innerWidth < 768) {
       setIsSidebarOpen(false);
     }
-  }, [appId]);
+  }, [appId, userId]);
 
   const handleThreadTitleChange = useCallback(
     async (threadId: string, newTitle: string) => {

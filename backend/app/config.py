@@ -46,8 +46,12 @@ class Settings(BaseSettings):
     # Frontend
     FRONTEND_URL: str = "http://localhost:3000"
 
+    # Backend base URL (this API). Used e.g. to allow webhook URLs to the same host when it's localhost.
+    BACKEND_URL: str = "http://localhost:8000"
+
     # Webhook header names (override to brand your headers)
     WEBHOOK_HEADER_APP_ID: str = "X-App-Id"
+    WEBHOOK_HEADER_APP_SECRET: str = "X-App-Secret"
     WEBHOOK_HEADER_THREAD_ID: str = "X-Thread-Id"
     WEBHOOK_HEADER_TIMESTAMP: str = "X-Timestamp"
     WEBHOOK_HEADER_SIGNATURE: str = "X-Signature"

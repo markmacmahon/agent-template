@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { EditableTitle } from "@/components/editable-title";
 
@@ -21,19 +21,23 @@ describe("EditableTitle", () => {
     fireEvent.click(screen.getByText("Original"));
     const input = screen.getByRole("textbox");
     fireEvent.change(input, { target: { value: "Updated title" } });
-    fireEvent.blur(input);
+    await act(async () => {
+      fireEvent.blur(input);
+    });
 
     expect(onSave).toHaveBeenCalledWith("Updated title");
   });
 
-  it("reverts and does not save when title is blank on blur", () => {
+  it("reverts and does not save when title is blank on blur", async () => {
     const onSave = jest.fn();
     render(<EditableTitle value="Original" onSave={onSave} />);
 
     fireEvent.click(screen.getByText("Original"));
     const input = screen.getByRole("textbox");
     fireEvent.change(input, { target: { value: "" } });
-    fireEvent.blur(input);
+    await act(async () => {
+      fireEvent.blur(input);
+    });
 
     expect(onSave).not.toHaveBeenCalled();
     expect(screen.getByText("Original")).toBeInTheDocument();
@@ -46,20 +50,24 @@ describe("EditableTitle", () => {
     fireEvent.click(screen.getByText("Original"));
     const input = screen.getByRole("textbox");
     fireEvent.change(input, { target: { value: "Changed" } });
-    fireEvent.keyDown(input, { key: "Escape" });
+    act(() => {
+      fireEvent.keyDown(input, { key: "Escape" });
+    });
 
     expect(onSave).not.toHaveBeenCalled();
     expect(screen.getByText("Original")).toBeInTheDocument();
   });
 
-  it("saves on Enter when non-empty", () => {
+  it("saves on Enter when non-empty", async () => {
     const onSave = jest.fn();
     render(<EditableTitle value="Original" onSave={onSave} />);
 
     fireEvent.click(screen.getByText("Original"));
     const input = screen.getByRole("textbox");
     fireEvent.change(input, { target: { value: "New title" } });
-    fireEvent.keyDown(input, { key: "Enter" });
+    await act(async () => {
+      fireEvent.keyDown(input, { key: "Enter" });
+    });
 
     expect(onSave).toHaveBeenCalledWith("New title");
   });

@@ -3,11 +3,20 @@
 import { useState, useActionState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { addApp } from "@/components/actions/apps-action";
 import { SubmitButton } from "@/components/ui/submitButton";
 import { t } from "@/i18n/keys";
 
 const initialState = { message: "" };
+
+function generateWebhookSecret(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
 
 export default function CreateAppPage() {
   const [state, dispatch] = useActionState(addApp, initialState);
@@ -15,6 +24,7 @@ export default function CreateAppPage() {
   const [scenario, setScenario] = useState<string>("generic");
   const [disclaimer, setDisclaimer] = useState<boolean>(false);
   const [webhookUrl, setWebhookUrl] = useState("");
+  const [webhookSecret, setWebhookSecret] = useState("");
 
   const webhookUrlWarning =
     selectedMode === "webhook" && !webhookUrl ? t("WEBHOOK_URL_WARNING") : null;
@@ -202,15 +212,59 @@ export default function CreateAppPage() {
                   {state.errors.webhook_url}
                 </p>
               )}
+              <p className="text-muted-foreground text-sm">
+                {t("WEBHOOK_URL_CORS_NOTE")}
+              </p>
+
+              {/* App ID & Secret (optional) — saved when app is created */}
+              <div className="space-y-2 border-t border-border pt-4">
+                <h3 className="text-base font-semibold">
+                  {t("PARTNER_API_CREDENTIALS_HEADING_OPTIONAL")}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {t("PARTNER_API_CREDENTIALS_INTRO_CREATE")}
+                </p>
+                <Label htmlFor="webhook_secret">
+                  {t("WEBHOOK_SECRET_LABEL")}
+                </Label>
+                <div className="flex gap-2 flex-wrap items-center">
+                  <Input
+                    id="webhook_secret"
+                    name="webhook_secret"
+                    type="password"
+                    autoComplete="off"
+                    placeholder={t("WEBHOOK_SECRET_PLACEHOLDER")}
+                    value={webhookSecret}
+                    onChange={(e) => setWebhookSecret(e.target.value)}
+                    className="flex-1 min-w-[200px] font-mono"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setWebhookSecret(generateWebhookSecret())}
+                  >
+                    {t("WEBHOOK_SECRET_GENERATE")}
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Hidden webhook_url for simulator mode */}
+          {/* Hidden webhook fields for simulator mode */}
           {selectedMode !== "webhook" && (
-            <input type="hidden" name="webhook_url" value="" />
+            <>
+              <input type="hidden" name="webhook_url" value="" />
+              <input type="hidden" name="webhook_secret" value="" />
+            </>
           )}
 
-          <SubmitButton text={t("APP_CREATE_SUBMIT")} />
+          <SubmitButton
+            text={
+              selectedMode === "webhook"
+                ? t("APP_CREATE_SUBMIT_WEBHOOK")
+                : t("APP_CREATE_SUBMIT")
+            }
+          />
 
           {state?.message && (
             <div className="mt-2 text-center text-sm text-destructive">

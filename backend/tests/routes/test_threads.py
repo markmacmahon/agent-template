@@ -1,7 +1,11 @@
+import uuid
+
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.models import App
 
 
@@ -104,10 +108,43 @@ async def test_create_thread_unauthorized_app(
 
 
 @pytest.mark.asyncio
+async def test_list_threads_with_app_secret_auth(
+    test_client: AsyncClient, authenticated_user, db_session: AsyncSession
+):
+    """List threads with X-App-Id + X-App-Secret works without JWT."""
+    app_response = await test_client.post(
+        "/apps/",
+        json={"name": "Partner App"},
+        headers=authenticated_user["headers"],
+    )
+    assert app_response.status_code == 200
+    app_id = app_response.json()["id"]
+
+    await db_session.execute(
+        update(App)
+        .where(App.id == uuid.UUID(app_id))
+        .values(webhook_secret="thread-secret-xyz")
+    )
+    await db_session.commit()
+
+    response = await test_client.get(
+        f"/apps/{app_id}/threads",
+        headers={
+            settings.WEBHOOK_HEADER_APP_ID: app_id,
+            settings.WEBHOOK_HEADER_APP_SECRET: "thread-secret-xyz",
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    assert "next_cursor" in data
+
+
+@pytest.mark.asyncio
 async def test_list_threads(
     test_client: AsyncClient, authenticated_user, db_session: AsyncSession
 ):
-    """Test listing threads for an app."""
+    """App threads endpoint returns cursor payload ordered by updated_at."""
     # Create app
     app_response = await test_client.post(
         "/apps/",
@@ -117,25 +154,33 @@ async def test_list_threads(
     app_id = app_response.json()["id"]
 
     # Create multiple threads
-    thread_ids = []
-    for i in range(3):
-        response = await test_client.post(
+    for i in range(4):
+        await test_client.post(
             f"/apps/{app_id}/threads",
             json={"title": f"Thread {i}", "customer_id": f"user{i}"},
             headers=authenticated_user["headers"],
         )
-        thread_ids.append(response.json()["thread"]["id"])
 
-    # List threads
+    # List threads first page
     response = await test_client.get(
-        f"/apps/{app_id}/threads",
+        f"/apps/{app_id}/threads?limit=2",
         headers=authenticated_user["headers"],
     )
 
     assert response.status_code == 200
     data = response.json()
-    assert data["total"] == 3
-    assert len(data["items"]) == 3
+    assert len(data["items"]) == 2
+    assert data["next_cursor"] is not None
+
+    # Second page
+    response2 = await test_client.get(
+        f"/apps/{app_id}/threads?limit=2&cursor={data['next_cursor']}",
+        headers=authenticated_user["headers"],
+    )
+    assert response2.status_code == 200
+    data2 = response2.json()
+    assert len(data2["items"]) == 2
+    assert data2["next_cursor"] is None
 
 
 @pytest.mark.asyncio
@@ -176,7 +221,7 @@ async def test_list_threads_filter_by_customer(
 
     assert response.status_code == 200
     data = response.json()
-    assert data["total"] == 2
+    assert data["next_cursor"] is None
     assert all(item["customer_id"] == "alice" for item in data["items"])
 
 
@@ -277,3 +322,165 @@ async def test_delete_thread(
         headers=authenticated_user["headers"],
     )
     assert get_response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_create_thread_creates_subscriber(
+    test_client: AsyncClient, authenticated_user, db_session: AsyncSession
+):
+    """Creating a thread with customer_id should auto-create a Subscriber."""
+    from app.models import Subscriber
+    from sqlalchemy.future import select
+
+    # Create app
+    app_response = await test_client.post(
+        "/apps/",
+        json={"name": "Test App"},
+        headers=authenticated_user["headers"],
+    )
+    app_id = app_response.json()["id"]
+
+    # Create thread with customer_id
+    response = await test_client.post(
+        f"/apps/{app_id}/threads",
+        json={"title": "Thread 1", "customer_id": "user-abc"},
+        headers=authenticated_user["headers"],
+    )
+    assert response.status_code == 200
+    thread = response.json()["thread"]
+    assert thread["subscriber_id"] is not None
+
+    # Verify subscriber exists in DB
+    result = await db_session.execute(
+        select(Subscriber).filter(
+            Subscriber.app_id == app_id, Subscriber.customer_id == "user-abc"
+        )
+    )
+    subscriber = result.scalars().first()
+    assert subscriber is not None
+    assert str(subscriber.id) == thread["subscriber_id"]
+    assert subscriber.display_name == "user-abc"
+    assert subscriber.last_seen_at is not None
+
+
+@pytest.mark.asyncio
+async def test_create_thread_reuses_existing_subscriber(
+    test_client: AsyncClient, authenticated_user, db_session: AsyncSession
+):
+    """Creating two threads with the same customer_id should reuse the subscriber."""
+    # Create app
+    app_response = await test_client.post(
+        "/apps/",
+        json={"name": "Test App"},
+        headers=authenticated_user["headers"],
+    )
+    app_id = app_response.json()["id"]
+
+    # Create two threads with the same customer_id
+    resp1 = await test_client.post(
+        f"/apps/{app_id}/threads",
+        json={"title": "Thread 1", "customer_id": "same-user"},
+        headers=authenticated_user["headers"],
+    )
+    resp2 = await test_client.post(
+        f"/apps/{app_id}/threads",
+        json={"title": "Thread 2", "customer_id": "same-user"},
+        headers=authenticated_user["headers"],
+    )
+
+    assert resp1.status_code == 200
+    assert resp2.status_code == 200
+
+    thread1 = resp1.json()["thread"]
+    thread2 = resp2.json()["thread"]
+
+    # Both threads should point to the same subscriber
+    assert thread1["subscriber_id"] == thread2["subscriber_id"]
+
+
+@pytest.mark.asyncio
+async def test_delete_thread_removes_orphaned_subscriber(
+    test_client: AsyncClient, authenticated_user, db_session: AsyncSession
+):
+    """Deleting the last thread for a subscriber should delete the subscriber."""
+    from app.models import Subscriber
+    from sqlalchemy.future import select
+
+    # Create app
+    app_response = await test_client.post(
+        "/apps/",
+        json={"name": "Test App"},
+        headers=authenticated_user["headers"],
+    )
+    app_id = app_response.json()["id"]
+
+    # Create thread with customer_id (creates subscriber)
+    thread_response = await test_client.post(
+        f"/apps/{app_id}/threads",
+        json={"title": "Only Thread", "customer_id": "orphan-user"},
+        headers=authenticated_user["headers"],
+    )
+    assert thread_response.status_code == 200
+    thread = thread_response.json()["thread"]
+    subscriber_id = thread["subscriber_id"]
+    assert subscriber_id is not None
+
+    # Delete the thread
+    delete_response = await test_client.delete(
+        f"/threads/{thread['id']}",
+        headers=authenticated_user["headers"],
+    )
+    assert delete_response.status_code == 200
+
+    # Subscriber should be gone
+    result = await db_session.execute(
+        select(Subscriber).filter(Subscriber.id == subscriber_id)
+    )
+    assert result.scalars().first() is None
+
+
+@pytest.mark.asyncio
+async def test_delete_thread_keeps_subscriber_with_remaining_threads(
+    test_client: AsyncClient, authenticated_user, db_session: AsyncSession
+):
+    """Deleting one thread should keep the subscriber if other threads remain."""
+    from app.models import Subscriber
+    from sqlalchemy.future import select
+
+    # Create app
+    app_response = await test_client.post(
+        "/apps/",
+        json={"name": "Test App"},
+        headers=authenticated_user["headers"],
+    )
+    app_id = app_response.json()["id"]
+
+    # Create two threads with same customer_id
+    resp1 = await test_client.post(
+        f"/apps/{app_id}/threads",
+        json={"title": "Thread 1", "customer_id": "shared-user"},
+        headers=authenticated_user["headers"],
+    )
+    resp2 = await test_client.post(
+        f"/apps/{app_id}/threads",
+        json={"title": "Thread 2", "customer_id": "shared-user"},
+        headers=authenticated_user["headers"],
+    )
+    assert resp1.status_code == 200
+    assert resp2.status_code == 200
+
+    thread1 = resp1.json()["thread"]
+    subscriber_id = thread1["subscriber_id"]
+
+    # Delete one thread
+    delete_response = await test_client.delete(
+        f"/threads/{thread1['id']}",
+        headers=authenticated_user["headers"],
+    )
+    assert delete_response.status_code == 200
+
+    # Subscriber should still exist
+    result = await db_session.execute(
+        select(Subscriber).filter(Subscriber.id == subscriber_id)
+    )
+    assert result.scalars().first() is not None

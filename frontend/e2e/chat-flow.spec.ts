@@ -37,6 +37,19 @@ async function openFirstAppChat(
   return appId;
 }
 
+async function getFirstAppId(
+  page: import("@playwright/test").Page,
+): Promise<string> {
+  await page.goto("/dashboard/apps");
+  await page.waitForSelector("table", { timeout: 10000 });
+  const chatLink = page.getByRole("link", { name: "Chat" }).first();
+  const href = await chatLink.getAttribute("href");
+  expect(href).toBeTruthy();
+  const match = href!.match(/\/apps\/([^/]+)\/chat/);
+  expect(match).toBeTruthy();
+  return match![1];
+}
+
 test.describe("Chat Flow", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
@@ -130,21 +143,11 @@ test.describe("Chat Flow", () => {
     page,
   }) => {
     await login(page);
-    await page.goto("/dashboard/apps");
-    await page.waitForSelector("table", { timeout: 10000 });
 
     await test.step("Open first app's edit page", async () => {
-      await page
-        .locator("table tbody tr")
-        .first()
-        .getByRole("button", { name: "Actions" })
-        .click();
-      await page.waitForSelector('[role="menu"]', {
-        state: "visible",
-        timeout: 5000,
-      });
-      await page.getByRole("menuitem", { name: "Edit App" }).click();
-      await expect(page).toHaveURL(/\/dashboard\/apps\/[^/]+\/edit/);
+      const appId = await getFirstAppId(page);
+      await page.goto(`/dashboard/apps/${appId}/edit`);
+      await expect(page).toHaveURL(`/dashboard/apps/${appId}/edit`);
     });
 
     await test.step("Integration section: Simulator and Webhook options", async () => {

@@ -30,18 +30,15 @@ describe("subscribers-actions", () => {
 
       const mockData = {
         items: [],
-        page: 1,
-        pages: 0,
-        size: 50,
-        total: 0,
+        next_cursor: null,
       };
       (listSubscribers as jest.Mock).mockResolvedValue({ data: mockData });
 
-      const result = await fetchSubscribers("app-1", 1, 50);
+      const result = await fetchSubscribers("app-1", undefined, 25);
 
       expect(listSubscribers).toHaveBeenCalledWith({
         path: { app_id: "app-1" },
-        query: { page: 1, size: 50 },
+        query: { cursor: undefined, limit: 25 },
         headers: { Authorization: "Bearer test-token" },
       });
       expect(result).toEqual({ data: mockData });
@@ -82,20 +79,22 @@ describe("subscribers-actions", () => {
 
       const mockData = {
         items: [],
-        page: 1,
-        pages: 0,
-        size: 50,
-        total: 0,
+        next_cursor: null,
       };
       (listSubscriberThreads as jest.Mock).mockResolvedValue({
         data: mockData,
       });
 
-      const result = await fetchSubscriberThreads("app-1", "sub-1", 1, 50);
+      const result = await fetchSubscriberThreads(
+        "app-1",
+        "sub-1",
+        undefined,
+        25,
+      );
 
       expect(listSubscriberThreads).toHaveBeenCalledWith({
         path: { app_id: "app-1", subscriber_id: "sub-1" },
-        query: { page: 1, size: 50 },
+        query: { cursor: undefined, limit: 25 },
         headers: { Authorization: "Bearer test-token" },
       });
       expect(result).toEqual({ data: mockData });

@@ -7,8 +7,8 @@ import {
   getSubscriber,
   listSubscriberThreads,
   type SubscriberRead,
-  type PageSubscriberSummary,
-  type PageThreadSummary,
+  type CursorPageSubscriberSummary,
+  type CursorPageThreadSummary,
 } from "@/app/clientService";
 
 type SuccessResult<T> = { data: T };
@@ -22,10 +22,10 @@ async function getAuthToken(): Promise<string | null> {
 
 export async function fetchSubscribers(
   appId: string,
-  page: number = 1,
-  size: number = 50,
+  cursor?: string,
+  limit: number = 25,
   q?: string,
-): Promise<ActionResult<PageSubscriberSummary>> {
+): Promise<ActionResult<CursorPageSubscriberSummary>> {
   const token = await getAuthToken();
   if (!token) {
     return { error: t("ERROR_NO_TOKEN") };
@@ -34,7 +34,7 @@ export async function fetchSubscribers(
   try {
     const { data, error } = await listSubscribers({
       path: { app_id: appId },
-      query: { page, size, q },
+      query: { cursor, limit, q },
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -100,9 +100,9 @@ export async function fetchSubscriberDetail(
 export async function fetchSubscriberThreads(
   appId: string,
   subscriberId: string,
-  page: number = 1,
-  size: number = 50,
-): Promise<ActionResult<PageThreadSummary>> {
+  cursor?: string,
+  limit: number = 25,
+): Promise<ActionResult<CursorPageThreadSummary>> {
   const token = await getAuthToken();
   if (!token) {
     return { error: t("ERROR_NO_TOKEN") };
@@ -111,7 +111,7 @@ export async function fetchSubscriberThreads(
   try {
     const { data, error } = await listSubscriberThreads({
       path: { app_id: appId, subscriber_id: subscriberId },
-      query: { page, size },
+      query: { cursor, limit },
       headers: {
         Authorization: `Bearer ${token}`,
       },

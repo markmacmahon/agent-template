@@ -16,9 +16,9 @@
  */
 const messages = {
   // ── Home / landing ──────────────────────────────────────────────
-  HOME_TITLE: "ChatBot Application Starter",
+  HOME_TITLE: "Partner Integration Platform",
   HOME_SUBTITLE:
-    "Build intelligent conversational AI applications with a modern, type-safe full-stack framework.",
+    "Build conversational agents that plug into existing chatbots. Handle customer Q&A or complete workflows like booking, ordering, and support.",
   HOME_CTA: "Go to Dashboard",
   HOME_GITHUB: "View on GitHub",
 
@@ -86,7 +86,7 @@ const messages = {
   NAV_WELCOME: "Welcome to your Dashboard",
   DASHBOARD_TITLE: "Partner Dashboard",
   DASHBOARD_SUBTITLE:
-    "Create and manage your agent apps. Configure simulators or webhooks, then chat and view subscribers.",
+    "Create and manage your Apps. Each App is your integration into the chatbot ecosystem — configure webhooks, test with the simulator, and monitor customer conversations.",
   DASHBOARD_CTA: "Go to Apps",
 
   // ── Error pages ─────────────────────────────────────────────────
@@ -98,6 +98,7 @@ const messages = {
   ERROR_NO_TOKEN: "No access token found",
   ERROR_NO_DATA: "No data returned from server",
   ERROR_UNKNOWN: "Unknown error",
+  ERROR_INVALID_CURSOR: "Invalid pagination cursor",
 
   // ── Backend error keys (returned as raw keys from API) ────────
   ERROR_INTERNAL: "Internal server error",
@@ -107,6 +108,14 @@ const messages = {
   ERROR_MESSAGE_NOT_FOUND: "Message not found or not authorized",
   ERROR_NO_USER_MESSAGES: "No user messages in thread",
   ERROR_NO_REPLY: "No reply generated",
+  ERROR_PARTNER_API_UNAUTHORIZED:
+    "Partner API: provide JWT Bearer token or X-App-Id and X-App-Secret headers",
+  ERROR_PARTNER_API_INVALID_APP_HEADER:
+    "Partner API: X-App-Id must be a valid app UUID",
+  ERROR_PARTNER_API_APP_ID_MISMATCH:
+    "Partner API: X-App-Id header must match the app in the URL",
+  ERROR_PARTNER_API_APP_OR_SECRET_INVALID:
+    "Partner API: app not found or secret invalid; ensure app has a webhook secret set",
 
   // ── Backend success keys (returned as raw keys from API) ──────
   ACTION_APP_DELETED: "App successfully deleted",
@@ -138,9 +147,11 @@ const messages = {
   APP_CREATE_TITLE: "Create New App",
   APP_CREATE_SUBTITLE: "Enter the details of the new app below.",
   APP_CREATE_SUBMIT: "Create App",
+  APP_CREATE_SUBMIT_WEBHOOK: "Create app & save credentials",
   APP_EDIT_TITLE: "Edit App",
   APP_EDIT_SUBTITLE: "Update the details of your app below.",
   APP_EDIT_SUBMIT: "Update App",
+  APP_EDIT_SUBMIT_WEBHOOK: "Save app & credentials",
   APP_LABEL_NAME: "App Name",
   APP_LABEL_DESCRIPTION: "App Description",
   APP_PLACEHOLDER_NAME: "App name",
@@ -174,7 +185,10 @@ const messages = {
 
   // ── Webhook config ──────────────────────────────────────────────
   WEBHOOK_URL_LABEL: "Webhook URL",
-  WEBHOOK_URL_PLACEHOLDER: "https://your-service.com/webhook",
+  WEBHOOK_URL_PLACEHOLDER:
+    "http://localhost:8080 (e.g. examples/webhook-python)",
+  WEBHOOK_URL_CORS_NOTE:
+    "Requests are sent from our server, so CORS does not apply. Any reachable URL is fine.",
   WEBHOOK_URL_WARNING:
     "No webhook configured. Simulator will be used until you add one.",
   WEBHOOK_STATUS_NOT_CONFIGURED: "Not configured",
@@ -184,6 +198,12 @@ const messages = {
   WEBHOOK_SECURITY_HEADING: "Webhook Security (Optional)",
   WEBHOOK_SECURITY_DESC:
     "If set, each webhook request will be signed using HMAC-SHA256. Your server can verify the signature to ensure authenticity.",
+  PARTNER_API_CREDENTIALS_HEADING: "App ID & Secret",
+  PARTNER_API_CREDENTIALS_HEADING_OPTIONAL: "App ID & Secret (optional)",
+  PARTNER_API_CREDENTIALS_INTRO:
+    "Use for the Partner API (no login). Save below to store them.",
+  PARTNER_API_CREDENTIALS_INTRO_CREATE:
+    "Set a secret to use the Partner API without logging in. Create the app below to save it.",
   WEBHOOK_SECRET_LABEL: "Webhook Secret",
   WEBHOOK_SECRET_PLACEHOLDER: "Enter or generate a secret",
   WEBHOOK_SECRET_GENERATE: "Generate",
@@ -205,7 +225,32 @@ const messages = {
   WEBHOOK_TAB_RESPONSE: "Response",
   WEBHOOK_TAB_EXAMPLES: "Examples",
   WEBHOOK_TAB_SIGNING: "Signature Verification",
+  WEBHOOK_TAB_PARTNER_API: "Partner API",
   WEBHOOK_STREAMING_HEADING: "Streaming Responses (Optional)",
+
+  // Partner API (subscribers & post to thread)
+  PARTNER_API_INTRO:
+    "Use your account (JWT) to list subscribers, list their threads, and post messages to a thread. All requests need the token from login.",
+  PARTNER_API_INTRO_WITH_SECRET:
+    "Use the App ID and webhook secret below — no login required. Send X-App-Id and X-App-Secret on every request.",
+  PARTNER_API_BASE_URL: "API base URL",
+  PARTNER_API_APP_ID: "App ID",
+  PARTNER_API_APP_ID_FOR_SECRET: "App ID (use with webhook secret)",
+  PARTNER_API_AUTH_APP_SECRET: "Authenticate with App ID + Secret",
+  PARTNER_API_AUTH_APP_SECRET_DESC:
+    "Send these headers on every request. No access token needed.",
+  PARTNER_API_STEP_1: "1. Get an access token",
+  PARTNER_API_STEP_1_DESC:
+    "Login with your email and password. Use the returned access_token in the Authorization header for all requests below.",
+  PARTNER_API_STEP_2: "2. List subscribers",
+  PARTNER_API_STEP_2_DESC:
+    "Returns subscribers (customers) for this app. Use limit and cursor for pagination.",
+  PARTNER_API_STEP_3: "3. List threads for a subscriber",
+  PARTNER_API_STEP_3_DESC:
+    "Returns threads for one subscriber. Use the subscriber id from step 2.",
+  PARTNER_API_STEP_4: "4. Post a message to a thread",
+  PARTNER_API_STEP_4_DESC:
+    "Send an assistant reply into a thread. Use the thread id from step 3.",
 
   // ── Chat interface ──────────────────────────────────────────────
   CHAT_GREETING_TITLE: "Hello there!",
@@ -223,6 +268,18 @@ const messages = {
   CHAT_START_BELOW: "Start chatting below.",
   CHAT_TITLE_CLICK_TO_EDIT: "Click to edit",
   CHAT_TITLE_PLACEHOLDER: "Conversation title",
+  CHAT_SCENARIO_PLACEHOLDER: "Demo scenario",
+  CHAT_SCENARIO_RUNNING: "Running demo…",
+  CHAT_SCENARIO_SUPPORT: "Customer Support Triage",
+  CHAT_SCENARIO_SUPPORT_DESC: "Diagnose and resolve a warranty issue",
+  CHAT_SCENARIO_MATCH: "Live Match Commentary",
+  CHAT_SCENARIO_MATCH_DESC: "Minute-by-minute football updates",
+  CHAT_SCENARIO_RESERVATION: "Restaurant Reservation",
+  CHAT_SCENARIO_RESERVATION_DESC: "Book a cozy dinner table with options",
+  CHAT_SCENARIO_SURVEY: "Order Feedback Survey",
+  CHAT_SCENARIO_SURVEY_DESC: "Collect three quick answers",
+  CHAT_SENDING: "Sending...",
+  CHAT_RETRY_SEND: "Retry",
 
   // ── Subscribers ─────────────────────────────────────────────────
   SUBSCRIBERS_PAGE_TITLE: "Subscribers",
@@ -235,10 +292,17 @@ const messages = {
   SUBSCRIBERS_NO_THREADS: "No threads yet for this subscriber",
   SUBSCRIBERS_SELECT_SUBSCRIBER: "Select a subscriber to view their threads",
   SUBSCRIBERS_SELECT_THREAD: "Select a thread to view the conversation",
+  SUBSCRIBERS_CHAT_TITLE: "Conversation",
   SUBSCRIBERS_NEW_THREAD: "New Thread",
   SUBSCRIBERS_LOADING: "Loading...",
+  SUBSCRIBERS_LOADING_MORE: "Loading more...",
   SUBSCRIBERS_LOAD_MORE: "Load More",
   SUBSCRIBERS_NAV_LINK: "Subscribers",
+  SUBSCRIBERS_THREAD_COUNT_ONE: "1 thread",
+  SUBSCRIBERS_THREAD_COUNT_OTHER: "{count} threads",
+  SUBSCRIBERS_MESSAGE_COUNT_ONE: "1 message",
+  SUBSCRIBERS_MESSAGE_COUNT_OTHER: "{count} messages",
+  SUBSCRIBERS_NO_MESSAGES_SHORT: "No messages yet",
 
   // ── Pagination ──────────────────────────────────────────────────
   PAGINATION_ITEMS_PER_PAGE: "Items per page:",

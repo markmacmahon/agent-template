@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { SubscribersList } from "@/components/subscribers-list";
 import * as subscribersActions from "../../components/actions/subscribers-actions";
@@ -10,7 +10,7 @@ jest.mock("../../components/actions/subscribers-actions", () => ({
 describe("SubscribersList", () => {
   it("shows search placeholder", async () => {
     jest.mocked(subscribersActions.fetchSubscribers).mockResolvedValue({
-      data: { items: [], page: 1, pages: 0, size: 50, total: 0 },
+      data: { items: [], next_cursor: null },
     });
 
     render(
@@ -29,7 +29,7 @@ describe("SubscribersList", () => {
 
   it("shows empty state when no subscribers", async () => {
     jest.mocked(subscribersActions.fetchSubscribers).mockResolvedValue({
-      data: { items: [], page: 1, pages: 0, size: 50, total: 0 },
+      data: { items: [], next_cursor: null },
     });
 
     render(
@@ -46,7 +46,7 @@ describe("SubscribersList", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows loading state initially", () => {
+  it("shows loading skeleton initially", () => {
     jest
       .mocked(subscribersActions.fetchSubscribers)
       .mockImplementation(() => new Promise(() => {}));
@@ -59,7 +59,7 @@ describe("SubscribersList", () => {
       />,
     );
 
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    expect(screen.getByTestId("subscribers-loading")).toBeInTheDocument();
   });
 
   it("renders subscriber list and calls onSubscriberSelect on click", async () => {
@@ -74,12 +74,10 @@ describe("SubscribersList", () => {
             created_at: "2024-01-15T09:00:00Z",
             thread_count: 2,
             last_message_at: "2024-01-15T10:00:00Z",
+            last_message_preview: "Hello",
           },
         ],
-        page: 1,
-        pages: 1,
-        size: 50,
-        total: 1,
+        next_cursor: null,
       },
     });
 
@@ -93,7 +91,9 @@ describe("SubscribersList", () => {
     );
 
     await screen.findByText("Alice");
-    fireEvent.click(screen.getByText("Alice"));
+    await act(async () => {
+      fireEvent.click(screen.getByText("Alice"));
+    });
     expect(onSubscriberSelect).toHaveBeenCalledWith("sub-1");
   });
 
@@ -111,5 +111,61 @@ describe("SubscribersList", () => {
     );
 
     await screen.findByText("Failed to fetch");
+  });
+
+  it("loads more subscribers when clicking load more", async () => {
+    jest
+      .mocked(subscribersActions.fetchSubscribers)
+      .mockResolvedValueOnce({
+        data: {
+          items: [
+            {
+              id: "sub-1",
+              app_id: "app-1",
+              customer_id: "customer-1",
+              display_name: "Alice",
+              created_at: "2024-01-15T09:00:00Z",
+              last_message_at: "2024-01-15T10:00:00Z",
+              thread_count: 1,
+              last_message_preview: "Hi",
+            },
+          ],
+          next_cursor: "cursor-1",
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          items: [
+            {
+              id: "sub-2",
+              app_id: "app-1",
+              customer_id: "customer-2",
+              display_name: "Bob",
+              created_at: "2024-01-16T09:00:00Z",
+              last_message_at: "2024-01-16T10:00:00Z",
+              thread_count: 3,
+              last_message_preview: "Hi there",
+            },
+          ],
+          next_cursor: null,
+        },
+      });
+
+    render(
+      <SubscribersList
+        appId="app-1"
+        selectedSubscriberId={null}
+        onSubscriberSelect={jest.fn()}
+      />,
+    );
+
+    await screen.findByText("Alice");
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("subscribers-load-more"));
+    });
+
+    expect(
+      jest.mocked(subscribersActions.fetchSubscribers),
+    ).toHaveBeenLastCalledWith("app-1", "cursor-1", 25, undefined);
   });
 });

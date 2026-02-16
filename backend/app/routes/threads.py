@@ -1,44 +1,38 @@
-from uuid import UUID
+from __future__ import annotations
+
 from datetime import datetime, timezone
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi_pagination import Page, Params
-from fastapi_pagination.ext.sqlalchemy import apaginate
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
 from app.database import User, get_async_session
+from app.dependencies import get_app_for_request
 from app.i18n import t
-from app.models import App, Thread
+from app.models import App, Subscriber, Thread
 from app.schemas import (
-    ThreadRead,
-    ThreadCreate,
-    ThreadUpdate,
-    ThreadCreateResponse,
+    CursorPage,
     MessageRead,
+    ThreadCreate,
+    ThreadCreateResponse,
+    ThreadRead,
+    ThreadUpdate,
 )
 from app.services.message_service import persist_assistant_message
+from app.services.subscriber_service import resolve_subscriber
 from app.users import current_active_user
+from app.utils import (
+    build_desc_pagination_filter,
+    decode_cursor,
+    encode_cursor,
+    parse_datetime,
+    parse_uuid,
+)
 
 router = APIRouter(tags=["threads"])
-
-
-async def get_app_by_id(
-    app_id: UUID,
-    db: AsyncSession,
-    user: User,
-) -> App:
-    """Get app by ID and verify ownership."""
-    result = await db.execute(
-        select(App).filter(App.id == app_id, App.user_id == user.id)
-    )
-    app = result.scalars().first()
-
-    if not app:
-        raise HTTPException(status_code=404, detail="ERROR_APP_NOT_FOUND")
-
-    return app
 
 
 async def get_thread_by_id(
@@ -61,28 +55,35 @@ async def get_thread_by_id(
     return thread
 
 
-def transform_threads(threads):
-    return [ThreadRead.model_validate(thread) for thread in threads]
-
-
 @router.post("/apps/{app_id}/threads", response_model=ThreadCreateResponse)
 async def create_thread(
     app_id: UUID,
     thread: ThreadCreate,
     db: AsyncSession = Depends(get_async_session),
-    user: User = Depends(current_active_user),
+    app: App = Depends(get_app_for_request),
 ):
     """Create a new thread for the specified app.
 
     When no user message is provided (default), the backend adds an initial
     assistant greeting as the clear entry point. The greeting is returned
     in the response so the UI can show it instantly without a second request.
+    Auth: JWT Bearer or X-App-Id + X-App-Secret.
     """
-    # Verify app ownership
-    await get_app_by_id(app_id, db, user)
+
+    # Get or create subscriber when customer_id is provided
+    subscriber_id = None
+    if thread.customer_id:
+        subscriber = await resolve_subscriber(
+            db,
+            app_id=app_id,
+            customer_id=thread.customer_id,
+        )
+        subscriber_id = subscriber.id
 
     # Create thread
-    db_thread = Thread(**thread.model_dump(), app_id=app_id)
+    db_thread = Thread(
+        **thread.model_dump(), app_id=app_id, subscriber_id=subscriber_id
+    )
     db.add(db_thread)
     await db.commit()
     await db.refresh(db_thread)
@@ -99,21 +100,19 @@ async def create_thread(
     )
 
 
-@router.get("/apps/{app_id}/threads", response_model=Page[ThreadRead])
+@router.get("/apps/{app_id}/threads", response_model=CursorPage[ThreadRead])
 async def list_threads(
     app_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    user: User = Depends(current_active_user),
-    page: int = Query(1, ge=1, description="Page number"),
-    size: int = Query(20, ge=1, le=100, description="Page size"),
+    app: App = Depends(get_app_for_request),
+    limit: int = Query(25, ge=1, le=200, description="Max items to return"),
+    cursor: str | None = Query(None, description="Opaque cursor for pagination"),
     customer_id: str | None = Query(None, description="Filter by customer ID"),
     status: str | None = Query(None, description="Filter by status"),
 ):
-    """List threads for the specified app, ordered by updated_at desc."""
-    # Verify app ownership
-    await get_app_by_id(app_id, db, user)
+    """List threads for the specified app, ordered by updated_at desc. Auth: JWT or X-App-Id + X-App-Secret."""
 
-    params = Params(page=page, size=size)
+    limit = min(limit, 200)
     query = select(Thread).filter(Thread.app_id == app_id)
 
     if customer_id:
@@ -122,9 +121,39 @@ async def list_threads(
     if status:
         query = query.filter(Thread.status == status)
 
-    query = query.order_by(Thread.updated_at.desc())
+    query = query.order_by(Thread.updated_at.desc(), Thread.id.desc())
 
-    return await apaginate(db, query, params, transformer=transform_threads)
+    if cursor:
+        cursor_data = decode_cursor(
+            cursor,
+            {
+                "updated_at": parse_datetime,
+                "id": parse_uuid,
+            },
+        )
+        pagination_clause = build_desc_pagination_filter(
+            [Thread.updated_at, Thread.id],
+            [cursor_data["updated_at"], cursor_data["id"]],
+        )
+        query = query.filter(pagination_clause)
+
+    result = await db.execute(query.limit(limit + 1))
+    rows = result.scalars().all()
+    has_more = len(rows) > limit
+    visible_rows = rows[:limit]
+    items = [ThreadRead.model_validate(row) for row in visible_rows]
+
+    next_cursor = None
+    if has_more and visible_rows:
+        last_row = visible_rows[-1]
+        next_cursor = encode_cursor(
+            {
+                "updated_at": last_row.updated_at,
+                "id": last_row.id,
+            }
+        )
+
+    return CursorPage(items=items, next_cursor=next_cursor)
 
 
 @router.get("/threads/{thread_id}", response_model=ThreadRead)
@@ -170,7 +199,21 @@ async def delete_thread(
     """Delete a thread."""
     thread = await get_thread_by_id(thread_id, db, user)
 
+    subscriber_id = thread.subscriber_id
     await db.delete(thread)
+
+    # Clean up orphaned subscriber
+    if subscriber_id:
+        result = await db.execute(
+            select(func.count())
+            .select_from(Thread)
+            .filter(Thread.subscriber_id == subscriber_id)
+        )
+        if result.scalar() == 0:
+            subscriber = await db.get(Subscriber, subscriber_id)
+            if subscriber:
+                await db.delete(subscriber)
+
     await db.commit()
 
     return {"message": "ACTION_THREAD_DELETED"}

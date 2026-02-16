@@ -8,7 +8,9 @@ describe("Home Page", () => {
   it("renders the heading", () => {
     render(<Home />);
 
-    expect(screen.getByText("ChatBot Application Starter")).toBeInTheDocument();
+    expect(
+      screen.getByText("Partner Integration Platform"),
+    ).toBeInTheDocument();
   });
 
   it("renders a link to the dashboard", () => {
@@ -36,7 +38,9 @@ describe("Home Page", () => {
     render(<Home />);
 
     expect(
-      screen.getByText(/build intelligent conversational ai applications/i),
+      screen.getByText(
+        /build conversational agents that plug into existing chatbots/i,
+      ),
     ).toBeInTheDocument();
   });
 });

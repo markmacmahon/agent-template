@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { t } from "@/i18n/keys";
 import { fetchSubscribers } from "@/components/actions/subscribers-actions";
 import type { SubscriberSummary } from "@/app/openapi-client";
@@ -22,54 +22,79 @@ export function SubscribersList({
   const [subscribers, setSubscribers] = useState<SubscriberSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchDebounce, setSearchDebounce] = useState("");
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearchDebounce(searchQuery);
-      setPage(1); // Reset to page 1 on search
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
   // Fetch subscribers
   useEffect(() => {
-    const loadSubscribers = async () => {
+    let cancelled = false;
+    async function loadSubscribers() {
       setLoading(true);
       setError(null);
+      setNextCursor(null);
 
       const result = await fetchSubscribers(
         appId,
-        page,
-        50,
+        undefined,
+        25,
         searchDebounce || undefined,
       );
 
+      if (cancelled) return;
+
       if ("error" in result) {
         setError(result.error);
+        setSubscribers([]);
+        setHasMore(false);
         setLoading(false);
         return;
       }
 
-      if (page === 1) {
-        setSubscribers(result.data.items);
-      } else {
-        setSubscribers((prev) => [...prev, ...result.data.items]);
-      }
-
-      setHasMore((result.data.page ?? 0) < (result.data.pages ?? 0));
+      setSubscribers(result.data.items);
+      setNextCursor(result.data.next_cursor ?? null);
+      setHasMore(Boolean(result.data.next_cursor));
       setLoading(false);
-    };
+    }
 
     loadSubscribers();
-  }, [appId, page, searchDebounce]);
+    return () => {
+      cancelled = true;
+    };
+  }, [appId, searchDebounce]);
 
-  const handleLoadMore = () => {
-    setPage((p) => p + 1);
+  const handleLoadMore = async () => {
+    if (!nextCursor || loadingMore) {
+      return;
+    }
+    setLoadingMore(true);
+    const result = await fetchSubscribers(
+      appId,
+      nextCursor,
+      25,
+      searchDebounce || undefined,
+    );
+
+    if ("error" in result) {
+      setError(result.error);
+      setLoadingMore(false);
+      return;
+    }
+
+    setSubscribers((prev) => [...prev, ...result.data.items]);
+    setNextCursor(result.data.next_cursor ?? null);
+    setHasMore(Boolean(result.data.next_cursor));
+    setLoadingMore(false);
   };
 
   const formatTimestamp = (timestamp: string | null) => {
@@ -88,9 +113,14 @@ export function SubscribersList({
     return date.toLocaleDateString();
   };
 
-  if (error) {
-    return <div className="p-4 text-center text-red-500 text-sm">{error}</div>;
-  }
+  const threadCountLabel = useMemo(() => {
+    return (count: number) =>
+      count === 1
+        ? t("SUBSCRIBERS_THREAD_COUNT_ONE")
+        : t("SUBSCRIBERS_THREAD_COUNT_OTHER").replace("{count}", String(count));
+  }, []);
+
+  const isEmpty = !loading && subscribers.length === 0;
 
   return (
     <div className="flex flex-col h-full">
@@ -111,7 +141,30 @@ export function SubscribersList({
 
       {/* Subscribers List */}
       <div className="flex-1 overflow-y-auto">
-        {subscribers.length === 0 && !loading ? (
+        {error && (
+          <div
+            className="p-4 text-center text-sm text-red-500"
+            data-testid="subscribers-error"
+          >
+            {error}
+          </div>
+        )}
+
+        {loading && !error && (
+          <div className="p-4 space-y-3" data-testid="subscribers-loading">
+            {[0, 1, 2].map((index) => (
+              <div
+                key={index}
+                className="animate-pulse rounded-lg border border-dashed border-muted-foreground/30 p-4"
+              >
+                <div className="h-4 w-1/2 rounded bg-muted mb-2" />
+                <div className="h-3 w-1/3 rounded bg-muted" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {isEmpty && !loading && !error && (
           <div className="p-8 text-center">
             <p className="text-sm font-medium text-muted-foreground">
               {t("SUBSCRIBERS_NO_SUBSCRIBERS")}
@@ -120,7 +173,9 @@ export function SubscribersList({
               {t("SUBSCRIBERS_NO_SUBSCRIBERS_DESCRIPTION")}
             </p>
           </div>
-        ) : (
+        )}
+
+        {!loading && !error && subscribers.length > 0 && (
           <>
             {subscribers.map((subscriber) => (
               <button
@@ -129,46 +184,51 @@ export function SubscribersList({
                 className={`w-full text-left p-4 border-b hover:bg-accent transition-colors ${
                   selectedSubscriberId === subscriber.id ? "bg-accent" : ""
                 }`}
+                data-testid={`subscriber-row-${subscriber.id}`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">
                       {subscriber.display_name || subscriber.customer_id}
                     </p>
-                    {subscriber.display_name && (
-                      <p className="text-xs text-muted-foreground truncate">
-                        {subscriber.customer_id}
+                    <p className="text-xs text-muted-foreground truncate">
+                      {subscriber.display_name
+                        ? subscriber.customer_id
+                        : t("SUBSCRIBERS_NO_MESSAGES_SHORT")}
+                    </p>
+                    {subscriber.last_message_preview && (
+                      <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                        {subscriber.last_message_preview}
                       </p>
                     )}
                   </div>
                   <div className="text-xs text-muted-foreground whitespace-nowrap">
-                    {formatTimestamp(subscriber.last_message_at ?? null)}
+                    {formatTimestamp(
+                      subscriber.last_message_at ??
+                        subscriber.created_at ??
+                        null,
+                    )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-xs text-muted-foreground">
-                    {subscriber.thread_count}{" "}
-                    {subscriber.thread_count === 1 ? "thread" : "threads"}
-                  </span>
+                <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                  <span>{threadCountLabel(subscriber.thread_count ?? 0)}</span>
                 </div>
               </button>
             ))}
 
-            {loading && (
-              <div className="p-4 text-center text-sm text-muted-foreground">
-                {t("SUBSCRIBERS_LOADING")}
-              </div>
-            )}
-
-            {hasMore && !loading && (
+            {hasMore && (
               <div className="p-3">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleLoadMore}
                   className="w-full"
+                  data-testid="subscribers-load-more"
+                  disabled={loadingMore}
                 >
-                  {t("SUBSCRIBERS_LOAD_MORE")}
+                  {loadingMore
+                    ? t("SUBSCRIBERS_LOADING_MORE")
+                    : t("SUBSCRIBERS_LOAD_MORE")}
                 </Button>
               </div>
             )}

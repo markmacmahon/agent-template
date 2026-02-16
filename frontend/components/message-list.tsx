@@ -6,17 +6,21 @@ import { useScroll } from "@/hooks/use-scroll";
 import { ArrowDownIcon, SparklesIcon } from "lucide-react";
 import { t } from "@/i18n/keys";
 
+type DisplayMessage = MessageRead & { pending?: boolean; error?: string };
+
 interface MessageListProps {
-  messages: MessageRead[];
+  messages: DisplayMessage[];
   streamingText?: string;
   /** When true, we're loading messages for the selected thread — don't show the greeting placeholder. */
   messagesLoading?: boolean;
+  onRetryPending?: (messageId: string) => void;
 }
 
 export function MessageList({
   messages,
   streamingText,
   messagesLoading = false,
+  onRetryPending,
 }: MessageListProps) {
   const { containerRef, endRef, isAtBottom, scrollToBottom } = useScroll();
 
@@ -89,6 +93,26 @@ export function MessageList({
                   {message.content}
                 </div>
               </div>
+
+              {message.pending && (
+                <div className="pl-10 text-xs text-muted-foreground flex items-center gap-2">
+                  <span>{t("CHAT_SENDING")}</span>
+                  <span className="inline-block size-2 animate-pulse rounded-full bg-muted-foreground" />
+                </div>
+              )}
+
+              {message.error && onRetryPending && (
+                <div className="pl-10 text-xs text-destructive flex items-center gap-2">
+                  <span>{message.error}</span>
+                  <button
+                    type="button"
+                    className="underline"
+                    onClick={() => onRetryPending(message.id)}
+                  >
+                    {t("CHAT_RETRY_SEND")}
+                  </button>
+                </div>
+              )}
             </div>
           ))}
 

@@ -45,4 +45,23 @@ describe("Create App Page", () => {
     expect(screen.getByLabelText(/app name/i)).toBeRequired();
     expect(screen.getByLabelText(/app description/i)).toBeRequired();
   });
+
+  it("when Webhook is selected, shows App ID & Secret (optional) section with secret field and Generate", async () => {
+    render(<CreateAppPage />);
+
+    await screen.getByRole("button", { name: "Webhook" }).click();
+
+    expect(
+      await screen.findByRole("heading", { name: /app id.*secret.*optional/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(/enter or generate a secret/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Generate" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /create app & save credentials/i }),
+    ).toBeInTheDocument();
+  });
 });

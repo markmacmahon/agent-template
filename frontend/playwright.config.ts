@@ -38,7 +38,7 @@ export default defineConfig({
       timeout: 30_000,
     },
     {
-      command: "pnpm run dev",
+      command: "pnpm run start:test",
       port: 3000,
       reuseExistingServer: !process.env.CI,
       timeout: 30_000,

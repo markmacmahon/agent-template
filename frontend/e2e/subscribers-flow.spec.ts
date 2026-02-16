@@ -133,6 +133,25 @@ test.describe("Subscribers Flow", () => {
     ).toBeVisible();
   });
 
+  test("app edit: Webhook mode shows App ID & Secret and Save app & credentials", async ({
+    page,
+  }) => {
+    await login(page);
+    const appId = await getFirstAppId(page);
+
+    await page.goto(`/dashboard/apps/${appId}/edit`);
+    await page.waitForSelector("form", { timeout: 10000 });
+
+    await page.getByRole("button", { name: "Webhook" }).click();
+
+    await expect(
+      page.getByRole("heading", { name: /app id & secret/i }),
+    ).toBeVisible({ timeout: 5000 });
+    await expect(
+      page.getByRole("button", { name: /save app & credentials/i }),
+    ).toBeVisible();
+  });
+
   test("app page: Chat link navigates to chat page", async ({ page }) => {
     await login(page);
     const appId = await getFirstAppId(page);
@@ -144,6 +163,36 @@ test.describe("Subscribers Flow", () => {
     await expect(page).toHaveURL(new RegExp(`/dashboard/apps/${appId}/chat`));
     await expect(page.getByTestId("chat-container")).toBeVisible({
       timeout: 10000,
+    });
+  });
+
+  test("subscribers page: scenario demo streams content", async ({ page }) => {
+    await login(page);
+    const appId = await getFirstAppId(page);
+
+    await page.goto(`/dashboard/apps/${appId}/subscribers`);
+    await expect(page.getByTestId("subscribers-container")).toBeVisible({
+      timeout: 10000,
+    });
+
+    // Select the first subscriber and thread
+    const firstSubscriber = page
+      .locator('[data-testid^="subscriber-row-"]')
+      .first();
+    await firstSubscriber.click();
+    await page.waitForTimeout(500);
+    const firstThread = page
+      .locator('[data-testid^="subscriber-thread-"]')
+      .first();
+    await firstThread.click();
+
+    // Start scenario demo
+    const scenarioTrigger = page.getByTestId("subscribers-scenario-select");
+    await scenarioTrigger.click();
+    await page.getByRole("option", { name: /Customer Support/i }).click();
+
+    await expect(page.getByText(/safety interlock isn't seated/i)).toBeVisible({
+      timeout: 20000,
     });
   });
 });

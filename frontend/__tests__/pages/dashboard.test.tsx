@@ -16,7 +16,7 @@ describe("Dashboard Page", () => {
   it("renders subtitle describing apps and configuration", () => {
     render(<DashboardPage />);
     expect(
-      screen.getByText(/create and manage your agent apps/i),
+      screen.getByText(/create and manage your apps/i),
     ).toBeInTheDocument();
   });
 });
