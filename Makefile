@@ -12,7 +12,7 @@ help:
 	@awk '/^[a-zA-Z_-]+:/{split($$1, target, ":"); print "  " target[1] "\t" substr($$0, index($$0,$$2))}' $(MAKEFILE_LIST)
 
 # Backend commands
-.PHONY: start-backend test-backend
+.PHONY: start-backend test-backend seed
 
 start-backend: ## Start the backend server with FastAPI and hot reload
 	-@lsof -ti :8000 | xargs kill 2>/dev/null || true
@@ -23,6 +23,9 @@ test-backend: ## Run backend tests using pytest (requires test database)
 	@$(DOCKER_COMPOSE) up -d db_test
 	@sleep 2
 	cd $(BACKEND_DIR) && uv run pytest
+
+seed: ## Seed test data (test user + app for E2E tests)
+	cd $(BACKEND_DIR) && uv run python seed_test_data.py
 
 
 # Frontend commands

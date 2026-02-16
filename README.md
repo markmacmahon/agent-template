@@ -103,17 +103,23 @@ make start-frontend   # Terminal 2
 - **Backend API:** http://localhost:8000
 - **API Documentation:** http://localhost:8000/docs
 
-### 7. Run Tests (optional)
+### 7. Seed Test Data (for E2E tests)
+
+```bash
+make seed  # Creates test user (tester1@example.com) and test app
+```
+
+**Note:** Skip this step if you're not running E2E tests. Safe to run multiple times (idempotent).
+
+### 8. Run Tests (optional)
 
 ```bash
 make test-backend   # Backend unit tests
 make test-frontend  # Frontend unit tests
-make test-e2e       # E2E tests (requires Playwright browsers from step 4)
+make test-e2e       # E2E tests (requires steps 4 and 7)
 ```
 
-**E2E Test Setup:** E2E tests expect a test user `tester1@example.com` / `Password#99` with at least one app. Register this user via the frontend or create it manually before running E2E tests.
-
-### 8. Webhook examples (optional)
+### 9. Webhook examples (optional)
 
 The **[examples/](examples/)** directory contains minimal webhook servers (Python stdlib, Node.js) that implement the partner webhook contract. Use them to test the platform with a real webhook or as a reference for your own integration.
 
