@@ -41,6 +41,16 @@ The **Dashboard** is where you create, configure, test, and monitor your agents.
 - **Docker Compose** – Consistent environments for development and production
 - **Pre-commit hooks** – Automated code linting, formatting, and validation before commits
 
+## Project Structure
+
+- **`backend/`** - FastAPI backend with PostgreSQL (Python, strict TDD)
+- **`frontend/`** - Next.js frontend with shadcn/ui (TypeScript, strict TDD)
+- **`examples/`** - Webhook example servers in Python and Node.js (see `examples/README.md`)
+- **`incubator/`** - Experimental scripts, tools, and Claude Code skills (lower bar, faster iteration - see `incubator/README.md`)
+- **`docs/`** - Architecture and system documentation
+
+The `incubator/` folder encourages rapid experimentation with lighter standards (documentation required, tests optional). Proven code can graduate to `backend/`, `frontend/`, or `examples/` after refactoring to meet core standards.
+
 ## Prerequisites
 
 - **Docker Desktop** - [Install for Mac](https://docs.docker.com/desktop/setup/install/mac-install/) or [other platforms](https://docs.docker.com/engine/install/)
