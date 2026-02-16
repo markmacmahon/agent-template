@@ -43,11 +43,41 @@ The **Dashboard** is where you create, configure, test, and monitor your agents.
 
 ## Prerequisites
 
-- Python 3.12
-- Node.js and npm
-- pnpm (`npm install -g pnpm`)
-- uv (Python dependency manager)
-- Docker and Docker Compose
+### macOS Setup
+
+If you're on a Mac, here's how to get everything installed:
+
+1. **Docker Desktop** (includes Docker Compose)
+   - Download and install from [Docker Desktop for Mac](https://docs.docker.com/desktop/setup/install/mac-install/)
+   - After installation, launch Docker Desktop and ensure it's running (you'll see the whale icon in your menu bar)
+
+2. **Python 3.12**
+   ```bash
+   brew install python@3.12
+   ```
+
+3. **Node.js and npm**
+   ```bash
+   brew install node
+   ```
+
+4. **pnpm** (package manager)
+   ```bash
+   npm install -g pnpm
+   ```
+
+5. **uv** (Python dependency manager)
+   ```bash
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
+
+### Other Platforms
+
+- **Docker**: [Installation guides](https://docs.docker.com/engine/install/)
+- **Python 3.12**: [Download from python.org](https://www.python.org/downloads/)
+- **Node.js**: [Download from nodejs.org](https://nodejs.org/)
+- **pnpm**: `npm install -g pnpm`
+- **uv**: See [uv installation docs](https://docs.astral.sh/uv/getting-started/installation/)
 
 ## Getting Started
 
@@ -71,7 +101,19 @@ Edit `backend/.env` and add your generated secret keys for:
 - `RESET_PASSWORD_SECRET_KEY`
 - `VERIFICATION_SECRET_KEY`
 
-### 2. Database Setup
+### 2. Verify Docker is Running
+
+**macOS users**: Make sure Docker Desktop is running before proceeding. You should see the whale icon in your menu bar.
+
+```bash
+# Verify Docker is working
+docker --version
+docker compose version
+```
+
+If these commands fail, start Docker Desktop and wait for it to fully launch.
+
+### 3. Database Setup
 
 ```bash
 # Build and start database container
@@ -82,7 +124,7 @@ docker compose up -d db
 make docker-migrate-db
 ```
 
-### 3. Install Dependencies
+### 4. Install Dependencies
 
 **Without Docker:**
 ```bash
@@ -100,7 +142,7 @@ pnpm install
 make docker-build
 ```
 
-### 4. Run the Application
+### 5. Run the Application
 
 **Without Docker:**
 ```bash
@@ -120,13 +162,13 @@ make docker-start-backend
 make docker-start-frontend
 ```
 
-### 5. Access the Application
+### 6. Access the Application
 
 - **Frontend:** http://localhost:3000
 - **Backend API:** http://localhost:8000
 - **API Documentation:** http://localhost:8000/docs
 
-### 6. Webhook examples (optional)
+### 7. Webhook examples (optional)
 
 The **[examples/](examples/)** directory contains minimal webhook servers (Python stdlib, Node.js) that implement the partner webhook contract. Use them to test the platform with a real webhook or as a reference for your own integration.
 
@@ -190,6 +232,36 @@ Optional for production: `MAIL_*` (SMTP), `OPENAPI_OUTPUT_FILE`, `OPENAPI_URL`, 
 - **Use either Docker or local setup consistently** - don't mix them for the same project session
 - The database is configured as `nexo_db` for development and runs on port 5432
 - Frontend runs on port 3000, backend on port 8000 - these ports are configured in docker-compose.yml
+
+### Docker on Mac
+
+**Common issues and solutions:**
+
+1. **"Cannot connect to Docker daemon"**
+   - Make sure Docker Desktop is running (whale icon in menu bar)
+   - Try restarting Docker Desktop
+
+2. **Port conflicts (5432, 8000, 3000 already in use)**
+   ```bash
+   # Check what's using a port
+   lsof -i :5432
+
+   # Stop other PostgreSQL instances if needed
+   brew services stop postgresql
+   ```
+
+3. **Slow Docker performance**
+   - Docker Desktop → Settings → Resources - allocate more CPU/memory
+   - For M1/M2 Macs, ensure you're using the Apple Silicon version
+
+4. **Permission issues with volumes**
+   ```bash
+   # Reset Docker volumes if needed
+   docker compose down
+   docker volume rm nexo_postgres_data
+   docker compose up -d db
+   make docker-migrate-db
+   ```
 
 ### Keep Your Mac Awake During Development
 

@@ -249,6 +249,8 @@ The `WIP.md` file tracks work-in-progress changes. Keep it focused on current de
 
 **Dependency conflicts:** `cd backend && uv sync` or `cd frontend && pnpm install`
 
+**Docker not running (Mac):** Ensure Docker Desktop is running (whale icon in menu bar). If `docker` commands fail, start Docker Desktop and wait for it to fully launch.
+
 ## E2E tests (Playwright)
 
 E2E tests run full user flows in a browser. **You do not need to start the backend or frontend manually.** Playwright starts both servers as part of the test run (see `frontend/playwright.config.ts` → `webServer`). When not in CI, it will reuse already-running servers if they are on the expected ports.
