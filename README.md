@@ -82,20 +82,38 @@ cd backend && uv sync
 cd frontend && pnpm install
 ```
 
-### 4. Run the Application
+### 4. Install Playwright Browsers (for E2E tests)
+
+```bash
+cd frontend && pnpm exec playwright install
+```
+
+**Note:** Skip this step if you're not running E2E tests. Required before `make test-e2e`.
+
+### 5. Run the Application
 
 ```bash
 make start-backend    # Terminal 1
 make start-frontend   # Terminal 2
 ```
 
-### 5. Access the Application
+### 6. Access the Application
 
 - **Frontend:** http://localhost:3000
 - **Backend API:** http://localhost:8000
 - **API Documentation:** http://localhost:8000/docs
 
-### 6. Webhook examples (optional)
+### 7. Run Tests (optional)
+
+```bash
+make test-backend   # Backend unit tests
+make test-frontend  # Frontend unit tests
+make test-e2e       # E2E tests (requires Playwright browsers from step 4)
+```
+
+**E2E Test Setup:** E2E tests expect a test user `tester1@example.com` / `Password#99` with at least one app. Register this user via the frontend or create it manually before running E2E tests.
+
+### 8. Webhook examples (optional)
 
 The **[examples/](examples/)** directory contains minimal webhook servers (Python stdlib, Node.js) that implement the partner webhook contract. Use them to test the platform with a real webhook or as a reference for your own integration.
 

@@ -26,7 +26,7 @@ test-backend: ## Run backend tests using pytest (requires test database)
 
 
 # Frontend commands
-.PHONY: start-frontend test-frontend
+.PHONY: start-frontend test-frontend test-e2e test-examples
 
 start-frontend: ## Start the frontend server with pnpm and hot reload
 	-@lsof -ti :3000 | xargs kill 2>/dev/null || true

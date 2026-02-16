@@ -257,8 +257,9 @@ E2E tests run full user flows in a browser. **You do not need to start the backe
 
 **Prerequisites (from project root):**
 
-1. **Development database** - `make docker-up-db` (backend started by Playwright uses the dev DB).
-2. **Test user** - A user `tester1@example.com` / `Password#99` with at least one app (for chat-flow specs).
+1. **Playwright browsers** - `cd frontend && pnpm exec playwright install` (one-time setup).
+2. **Development database** - `make docker-up-db` (backend started by Playwright uses the dev DB).
+3. **Test user** - A user `tester1@example.com` / `Password#99` with at least one app (for chat-flow specs).
 
 **Run E2E:**
 

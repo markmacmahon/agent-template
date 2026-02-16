@@ -32,14 +32,10 @@ def upgrade() -> None:
             nullable=False,
         ),
     )
-    op.add_column(
-        "threads", sa.Column("customer_id", sa.String(length=128), nullable=True)
-    )
-    op.drop_index(op.f("ix_threads_app_external_user"), table_name="threads")
-    op.create_index(
-        "ix_threads_app_customer", "threads", ["app_id", "customer_id"], unique=False
-    )
-    op.drop_column("threads", "external_user_id")
+    # Note: customer_id column already exists from migration 0a762d207d9f
+    # This migration was originally intended to rename external_user_id to customer_id
+    # but the earlier migration already created it with the correct name
+    # So we skip adding it here to avoid conflicts
     # ### end Alembic commands ###
 
 
