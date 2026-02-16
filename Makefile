@@ -57,7 +57,7 @@ precommit: ## Run pre-commit checks on all files (run before committing)
 
 
 # Docker commands (databases and mailhog only)
-.PHONY: docker-up-db docker-up-test-db docker-up-mailhog docker-down
+.PHONY: docker-up-db docker-up-test-db docker-up-mailhog docker-down docker-migrate-db
 
 docker-up-db: ## Start the development database
 	$(DOCKER_COMPOSE) up -d db
@@ -67,6 +67,9 @@ docker-up-test-db: ## Start the test database
 
 docker-up-mailhog: ## Start mailhog email testing server
 	$(DOCKER_COMPOSE) up -d mailhog
+
+docker-migrate-db: ## Run database migrations
+	cd $(BACKEND_DIR) && uv run alembic upgrade head
 
 docker-down: ## Stop all Docker services
 	$(DOCKER_COMPOSE) down

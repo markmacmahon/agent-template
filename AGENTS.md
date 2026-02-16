@@ -127,7 +127,7 @@ make precommit                  # Lint + format + type check (all files)
 make install-hooks              # One-time: install git pre-commit hooks
 
 # Database
-docker compose up -d db         # Start PostgreSQL
+make docker-up-db               # Start PostgreSQL
 make docker-migrate-db          # Run Alembic migrations
 ```
 
@@ -245,7 +245,7 @@ The `WIP.md` file tracks work-in-progress changes. Keep it focused on current de
 
 **TypeScript errors after backend changes:** `cd frontend && rm -rf .next && pnpm run dev`
 
-**Database connection issues:** `docker compose down && docker volume rm nexo_postgres_data && docker compose up -d db && make docker-migrate-db`
+**Database connection issues:** `make docker-down && docker volume rm nexo_postgres_data && make docker-up-db && make docker-migrate-db`
 
 **Dependency conflicts:** `cd backend && uv sync` or `cd frontend && pnpm install`
 
@@ -257,7 +257,7 @@ E2E tests run full user flows in a browser. **You do not need to start the backe
 
 **Prerequisites (from project root):**
 
-1. **Development database** - `docker compose up -d db` (backend started by Playwright uses the dev DB).
+1. **Development database** - `make docker-up-db` (backend started by Playwright uses the dev DB).
 2. **Test user** - A user `tester1@example.com` / `Password#99` with at least one app (for chat-flow specs).
 
 **Run E2E:**

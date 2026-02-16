@@ -43,132 +43,59 @@ The **Dashboard** is where you create, configure, test, and monitor your agents.
 
 ## Prerequisites
 
-### macOS Setup
-
-If you're on a Mac, here's how to get everything installed:
-
-1. **Docker Desktop** (includes Docker Compose)
-   - Download and install from [Docker Desktop for Mac](https://docs.docker.com/desktop/setup/install/mac-install/)
-   - After installation, launch Docker Desktop and ensure it's running (you'll see the whale icon in your menu bar)
-
-2. **Python 3.12**
-   ```bash
-   brew install python@3.12
-   ```
-
-3. **Node.js and npm**
-   ```bash
-   brew install node
-   ```
-
-4. **pnpm** (package manager)
-   ```bash
-   npm install -g pnpm
-   ```
-
-5. **uv** (Python dependency manager)
-   ```bash
-   curl -LsSf https://astral.sh/uv/install.sh | sh
-   ```
-
-### Other Platforms
-
-- **Docker**: [Installation guides](https://docs.docker.com/engine/install/)
-- **Python 3.12**: [Download from python.org](https://www.python.org/downloads/)
-- **Node.js**: [Download from nodejs.org](https://nodejs.org/)
-- **pnpm**: `npm install -g pnpm`
-- **uv**: See [uv installation docs](https://docs.astral.sh/uv/getting-started/installation/)
+- **Docker Desktop** - [Install for Mac](https://docs.docker.com/desktop/setup/install/mac-install/) or [other platforms](https://docs.docker.com/engine/install/)
+- **Python 3.12** - `brew install python@3.12` or [download](https://www.python.org/downloads/)
+- **Node.js** - `brew install node` or [download](https://nodejs.org/)
+- **pnpm** - `npm install -g pnpm`
+- **uv** - `curl -LsSf https://astral.sh/uv/install.sh | sh` or [see docs](https://docs.astral.sh/uv/getting-started/installation/)
 
 ## Getting Started
 
-### 1. Environment Setup
+### 1. Clone and Setup Environment
 
 ```bash
-# Backend environment
+# Backend
 cd backend
 cp .env.example .env
 
-# Generate secret keys (run three times, one for each key in .env)
+# Generate secret keys (run three times, one for each key)
 python3 -c "import secrets; print(secrets.token_hex(32))"
 
-# Frontend environment
+# Edit backend/.env and add your generated secret keys
+
+# Frontend
 cd frontend
 cp .env.example .env.local
 ```
 
-Edit `backend/.env` and add your generated secret keys for:
-- `ACCESS_SECRET_KEY`
-- `RESET_PASSWORD_SECRET_KEY`
-- `VERIFICATION_SECRET_KEY`
-
-### 2. Verify Docker is Running
-
-**macOS users**: Make sure Docker Desktop is running before proceeding. You should see the whale icon in your menu bar.
+### 2. Start Database
 
 ```bash
-# Verify Docker is working
-docker --version
-docker compose version
-```
-
-If these commands fail, start Docker Desktop and wait for it to fully launch.
-
-### 3. Database Setup
-
-```bash
-# Build and start database container
-docker compose build db
-docker compose up -d db
-
-# Apply database migrations
+make docker-up-db
 make docker-migrate-db
 ```
 
-### 4. Install Dependencies
+### 3. Install Dependencies
 
-**Without Docker:**
 ```bash
-# Backend
-cd backend
-uv sync
-
-# Frontend
-cd frontend
-pnpm install
+cd backend && uv sync
+cd frontend && pnpm install
 ```
 
-**With Docker:**
+### 4. Run the Application
+
 ```bash
-make docker-build
+make start-backend    # Terminal 1
+make start-frontend   # Terminal 2
 ```
 
-### 5. Run the Application
-
-**Without Docker:**
-```bash
-# Start backend (from project root)
-make start-backend
-
-# Start frontend (from project root, in another terminal)
-make start-frontend
-```
-
-**With Docker:**
-```bash
-# Start backend container
-make docker-start-backend
-
-# Start frontend container
-make docker-start-frontend
-```
-
-### 6. Access the Application
+### 5. Access the Application
 
 - **Frontend:** http://localhost:3000
 - **Backend API:** http://localhost:8000
 - **API Documentation:** http://localhost:8000/docs
 
-### 7. Webhook examples (optional)
+### 6. Webhook examples (optional)
 
 The **[examples/](examples/)** directory contains minimal webhook servers (Python stdlib, Node.js) that implement the partner webhook contract. Use them to test the platform with a real webhook or as a reference for your own integration.
 
@@ -227,88 +154,10 @@ Optional for production: `MAIL_*` (SMTP), `OPENAPI_OUTPUT_FILE`, `OPENAPI_URL`, 
 
 ## Development Tips
 
-### Environment Setup
-
-- **Use either Docker or local setup consistently** - don't mix them for the same project session
-- The database is configured as `nexo_db` for development and runs on port 5432
-- Frontend runs on port 3000, backend on port 8000 - these ports are configured in docker-compose.yml
-
-### Docker on Mac
-
-**Common issues and solutions:**
-
-1. **"Cannot connect to Docker daemon"**
-   - Make sure Docker Desktop is running (whale icon in menu bar)
-   - Try restarting Docker Desktop
-
-2. **Port conflicts (5432, 8000, 3000 already in use)**
-   ```bash
-   # Check what's using a port
-   lsof -i :5432
-
-   # Stop other PostgreSQL instances if needed
-   brew services stop postgresql
-   ```
-
-3. **Slow Docker performance**
-   - Docker Desktop → Settings → Resources - allocate more CPU/memory
-   - For M1/M2 Macs, ensure you're using the Apple Silicon version
-
-4. **Permission issues with volumes**
-   ```bash
-   # Reset Docker volumes if needed
-   docker compose down
-   docker volume rm nexo_postgres_data
-   docker compose up -d db
-   make docker-migrate-db
-   ```
-
-### Keep Your Mac Awake During Development
-
-Prevent your Mac from sleeping during long-running development tasks:
-
-```bash
-# Keep display awake for 2 hours (7200 seconds)
-caffeinate -d -u -t 7200
-```
-
-### Pre-commit Hooks
-
-Before committing, run:
-
-```bash
-make precommit
-```
-
-This runs linting, formatting, and type checking. Dependencies install automatically if needed.
-
-### Clean Development Environment
-
-To ensure a clean development environment:
-
-1. **Stop unnecessary Docker containers**:
-   ```bash
-   docker ps  # See what's running
-   docker stop <container-name>  # Stop unneeded containers
-   ```
-
-2. **Use PostgreSQL in Docker** (recommended):
-   ```bash
-   docker compose up -d db  # Start only the database
-   ```
-
-3. **Clear frontend cache** if you encounter build issues:
-   ```bash
-   cd frontend
-   rm -rf .next node_modules/.cache
-   pnpm run dev
-   ```
-
-4. **Check for port conflicts** - ensure these ports are free:
-   - 3000 (Frontend)
-   - 8000 (Backend)
-   - 5432 (PostgreSQL main)
-   - 5433 (PostgreSQL test)
+- **Ports**: Frontend (3000), Backend (8000), Database (5432), Test DB (5433)
+- **Docker Desktop**: Must be running for database (Mac users: check whale icon in menu bar)
+- **Port conflicts**: Use `lsof -i :5432` to find conflicts, `brew services stop postgresql` to stop local PostgreSQL
+- **Pre-commit**: Run `make precommit` before committing
 
 ### Type Safety & API Sync
 
@@ -326,41 +175,25 @@ Manual regeneration (if needed): `cd frontend && pnpm run generate-client`
 
 ### Testing
 
-Run tests for both backend and frontend:
-
 ```bash
-# Backend tests
-make test-backend
-
-# Frontend tests
-make test-frontend
-
-# With Docker
-make docker-test-backend
-make docker-test-frontend
+make test-backend   # Backend tests (pytest)
+make test-frontend  # Frontend tests (Jest)
+make test-e2e       # E2E tests (Playwright)
 ```
 
 ### Database Migrations
 
-Create and apply database schema changes with Alembic:
-
 ```bash
-# Create a new migration
-make docker-db-schema migration_name="add users table"
-
-# Apply migrations
-make docker-migrate-db
+make docker-migrate-db  # Apply migrations
+cd backend && uv run alembic revision --autogenerate -m "description"  # Create new migration
 ```
 
-### Email Testing (MailHog)
-
-For local email testing, start the MailHog server:
+### Email Testing
 
 ```bash
-make docker-up-mailhog
+make docker-up-mailhog  # Start MailHog
+# View emails at http://localhost:8025
 ```
-
-Access the email inbox at http://localhost:8025
 
 ## Deployment
 
