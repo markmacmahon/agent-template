@@ -1,4 +1,4 @@
-# Agent Template
+# Nexo Agent Template
 
 **An orchestration layer for modular conversational agents.**
 

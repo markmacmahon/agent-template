@@ -8,7 +8,7 @@ describe("Home Page", () => {
   it("renders the heading", () => {
     render(<Home />);
 
-    expect(screen.getByText("Agent Template")).toBeInTheDocument();
+    expect(screen.getByText("Nexo Agent Template")).toBeInTheDocument();
   });
 
   it("renders a link to the dashboard", () => {

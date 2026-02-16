@@ -16,7 +16,7 @@
  */
 const messages = {
   // ── Home / landing ──────────────────────────────────────────────
-  HOME_TITLE: "Agent Template",
+  HOME_TITLE: "Nexo Agent Template",
   HOME_SUBTITLE:
     "Build conversational agents that integrate seamlessly with existing chatbot ecosystems. Create modular integrations that handle specialized tasks from simple Q&A to complex transactional workflows.",
   HOME_CTA: "Go to Dashboard",

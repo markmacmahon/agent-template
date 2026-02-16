@@ -1,6 +1,6 @@
 # System Overview
 
-This document provides a comprehensive technical overview of the Agent Template - an orchestration layer for modular conversational agents.
+This document provides a comprehensive technical overview of the Nexo Agent Template - an orchestration layer for modular conversational agents.
 
 ## Architecture Philosophy: Decoupled State and Execution
 
